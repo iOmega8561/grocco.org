@@ -1,0 +1,19 @@
+# Optional: the whole site from your own server instead of Cloudflare Pages.
+#   podman build -f deploy/site/Containerfile -t localhost/grocco-site:latest \
+#     --build-arg VITE_STATUS_URL=https://status.grocco.org/status.json .
+
+FROM docker.io/library/node:22-alpine AS build
+WORKDIR /src
+COPY package.json package-lock.json ./
+RUN npm ci --no-audit --no-fund
+COPY . .
+ARG VITE_STATUS_URL=""
+ENV VITE_STATUS_URL=${VITE_STATUS_URL}
+# build:offline skips the GitHub sync, so the image builds without network surprises;
+# run `npm run sync` before building to refresh the committed stats.
+RUN npm run build:offline
+
+FROM docker.io/library/caddy:2-alpine
+COPY deploy/site/Caddyfile /etc/caddy/Caddyfile
+COPY --from=build /src/dist /srv
+EXPOSE 8080

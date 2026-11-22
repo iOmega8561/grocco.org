@@ -1,0 +1,25 @@
+# ~/.config/containers/systemd/site.container
+[Unit]
+Description=Personal website
+
+[Container]
+Image=localhost/grocco-site:latest
+ContainerName=site
+Network=status.network
+# Behind cloudflared on the same network; no host port needed.
+
+ReadOnly=true
+Tmpfs=/data
+Tmpfs=/config
+DropCapability=ALL
+NoNewPrivileges=true
+
+HealthCmd=wget -q -O /dev/null http://127.0.0.1:8080/
+HealthInterval=60s
+
+[Service]
+Restart=on-failure
+MemoryMax=96M
+
+[Install]
+WantedBy=default.target
