@@ -7,9 +7,11 @@
     "node": ">=22"
   },
   "scripts": {
+    "sync": "node scripts/sync-github.mjs",
     "dev": "vite",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "build": "tsc -p tsconfig.json --noEmit && vite build",
+    "build": "node scripts/sync-github.mjs && tsc -p tsconfig.json --noEmit && vite build",
+    "build:offline": "tsc -p tsconfig.json --noEmit && vite build",
     "preview": "vite preview"
   },
   "dependencies": {
