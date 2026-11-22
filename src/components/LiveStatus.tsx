@@ -13,8 +13,11 @@ type State =
 
 const pollEvery = 60_000;
 
-/** Networks that say nothing about how services are grouped. */
-const ungroupedNetworks = new Set(["podman", "host", "none", "bridge"]);
+/**
+ * Networks that say nothing about how services are grouped: Podman's default network, host and no
+ * networking, and the user-mode modes of rootless containers, should a Podman version report them.
+ */
+const ungroupedNetworks = new Set(["podman", "host", "none", "bridge", "pasta", "slirp4netns"]);
 
 /** Quadlet names the network of `media.network` "systemd-media"; the panel shows "media". */
 function networkName(network: string): string | null {
@@ -26,7 +29,8 @@ type Group = { network: string | null; containers: ContainerStatus[] };
 
 /**
  * One group per network, by name, with containers on no named network last. A container on
- * several networks appears in each of them. Null when the agent sends no networks at all.
+ * several networks appears in each of them. Null, so the panel shows a single list, when no
+ * container is on a named network: an agent that sends no networks, or only pasta containers.
  */
 function groupByNetwork(containers: ContainerStatus[]): Group[] | null {
   if (!containers.some((container) => container.networks !== undefined)) return null;
@@ -37,6 +41,7 @@ function groupByNetwork(containers: ContainerStatus[]): Group[] | null {
     if (names.length === 0) other.push(container);
     for (const name of names) groups.set(name, [...(groups.get(name) ?? []), container]);
   }
+  if (groups.size === 0) return null;
   const named: Group[] = [...groups.entries()]
     .sort(([a], [b]) => a.localeCompare(b))
     .map(([network, members]) => ({ network, containers: members }));
