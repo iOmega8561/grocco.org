@@ -1,0 +1,124 @@
+# ──────────────────────────────────────────────────────────────
+#  Dependencies
+# ──────────────────────────────────────────────────────────────
+node_modules/
+.pnpm-store/
+.yarn/*
+!.yarn/patches
+!.yarn/releases
+.pnp.*
+jspm_packages/
+
+# ──────────────────────────────────────────────────────────────
+#  Build output and caches (Vite, TypeScript, tooling)
+# ──────────────────────────────────────────────────────────────
+dist/
+dist-ssr/
+build/
+.vite/
+*.tsbuildinfo
+.cache/
+.eslintcache
+.stylelintcache
+.parcel-cache/
+coverage/
+.nyc_output/
+
+# Note: src/generated/github.json is committed on purpose. The build
+# falls back to it when GitHub can't be reached, so don't ignore it.
+
+# ──────────────────────────────────────────────────────────────
+#  Environment and secrets
+# ──────────────────────────────────────────────────────────────
+*.local
+.env
+.env.*
+!.env.example
+# Cloudflare: Wrangler state and tunnel credentials
+.wrangler/
+.dev.vars
+cloudflared-token*
+cert.pem
+*.pem
+*.key
+*.p12
+# A real status document captured from the server (the sample stays tracked)
+dev/status.json
+
+# ──────────────────────────────────────────────────────────────
+#  Logs and debug output
+# ──────────────────────────────────────────────────────────────
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
+
+# ──────────────────────────────────────────────────────────────
+#  macOS
+# ──────────────────────────────────────────────────────────────
+.DS_Store
+.AppleDouble
+.LSOverride
+# Custom folder icons (the name ends with a carriage return)
+Icon
+# AppleDouble resource forks, also found in zips made by Finder
+._*
+__MACOSX/
+# Volume-level files
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+
+# ──────────────────────────────────────────────────────────────
+#  Windows and Linux
+# ──────────────────────────────────────────────────────────────
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+[Dd]esktop.ini
+$RECYCLE.BIN/
+*.lnk
+*~
+.directory
+.fuse_hidden*
+.nfs*
+.Trash-*
+
+# ──────────────────────────────────────────────────────────────
+#  Editors and IDEs
+# ──────────────────────────────────────────────────────────────
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/
+*.iml
+.fleet/
+.zed/
+.nova/
+*.sublime-project
+*.sublime-workspace
+*.swp
+*.swo
+.*.sw?
+Session.vim
+.netrwhist
+
+# ──────────────────────────────────────────────────────────────
+#  Media work files (raw recordings before ffmpeg, see README)
+# ──────────────────────────────────────────────────────────────
+*.mov
+*.MOV

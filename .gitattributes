@@ -1,0 +1,19 @@
+# Normalise line endings: LF in the repository and in every checkout.
+* text=auto eol=lf
+
+# Binary assets: never diff or touch line endings.
+*.webp  binary
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.gif   binary
+*.ico   binary
+*.mp4   binary
+*.webm  binary
+*.woff  binary
+*.woff2 binary
+*.pdf   binary
+
+# Generated files: collapsed in GitHub diffs, left out of language stats.
+package-lock.json         linguist-generated=true -diff
+src/generated/*.json      linguist-generated=true
