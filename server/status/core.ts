@@ -87,8 +87,10 @@ async function read(method: string, store: StatusStore, options: StatusOptions):
 }
 
 async function write(request: Request, store: StatusStore, options: StatusOptions): Promise<Response> {
-  if (!options.token) return json({ error: "status updates are not configured" }, 503);
-  if (!(await authorized(request.headers.get("Authorization"), options.token))) {
+  // Trimmed: a secret pasted into a dashboard or piped from `echo` easily carries a trailing newline.
+  const token = options.token?.trim();
+  if (!token) return json({ error: "status updates are not configured" }, 503);
+  if (!(await authorized(request.headers.get("Authorization"), token))) {
     return json({ error: "unauthorized" }, 401, { "WWW-Authenticate": 'Bearer realm="status"' });
   }
 
