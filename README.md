@@ -101,9 +101,10 @@ While no token is configured, every update is refused.
 
 - Build command: `npm run build`
 - Output directory: `dist`
-- Environment variables: `NODE_VERSION=22`, `VITE_STATUS_URL=/api/status`, optionally `GITHUB_TOKEN`
+- Environment variables: `NODE_VERSION=22`, `VITE_STATUS_URL=/api/status`, optionally `GITHUB_TOKEN` and
+  `STATUS_STALE_AFTER` in seconds
 - Bindings: a Workers KV namespace bound as `STATUS`
-- Secrets: `STATUS_TOKEN`, and optionally `STATUS_STALE_AFTER` in seconds
+- Secrets: `STATUS_TOKEN` (see [Setting up the token](#setting-up-the-token))
 
 `functions/api/status.ts` becomes the endpoint automatically. `public/_redirects` routes every other path to
 the app, and `public/_headers` sets the security headers.
@@ -118,7 +119,7 @@ final image is distroless: no shell, no package manager, a non-root user, nothin
 
 ```sh
 podman build -f deploy/site/Containerfile -t localhost/grocco-site:latest .
-openssl rand -hex 32 | tee /dev/stderr | podman secret create site-status-token -
+podman secret create site-status-token -    # paste the token, then Ctrl-D; see below
 install -Dm644 deploy/site/site.container -t ~/.config/containers/systemd/
 systemctl --user daemon-reload
 systemctl --user start site
@@ -140,13 +141,12 @@ the server it is meant to report on.
 
 On the monitored server, a systemd timer runs `deploy/status/status-agent.sh` every 5 minutes. It reads
 `podman ps`, keeps only the containers named in `STATUS_CONTAINERS`, and sends the report with curl. It needs
-podman, jq and curl, and makes no inbound connection possible.
+podman, jq and curl, and makes no inbound connection possible. Create the token first (see
+[Setting up the token](#setting-up-the-token)).
 
 ```sh
 install -Dm755 deploy/status/status-agent.sh ~/.local/bin/status-agent.sh
 install -Dm644 deploy/status/status-agent.{service,timer} -t ~/.config/systemd/user/
-install -Dm600 /dev/null ~/.config/status-agent/token
-printf '%s' "<the same token as the site>" > ~/.config/status-agent/token
 
 systemctl --user daemon-reload
 systemctl --user enable --now status-agent.timer
@@ -157,7 +157,51 @@ Set `STATUS_ENDPOINT` and `STATUS_CONTAINERS` in `status-agent.service`. The tok
 systemd's `LoadCredential=`, never through the environment or the command line. On a systemd too old for
 credentials in user services, replace that line with `Environment=STATUS_TOKEN_FILE=%h/.config/status-agent/token`.
 
-Check a run with `systemctl --user start status-agent && journalctl --user -u status-agent -n 20`.
+### Setting up the token
+
+The same token goes in two places: on the site, which checks it, and on the monitored server, where the agent
+sends it. Any long random string works; surrounding whitespace is ignored.
+
+**1. Generate it** on the monitored server, straight into the agent's file, so it never reaches the shell
+history:
+
+```sh
+install -Dm600 /dev/null ~/.config/status-agent/token
+openssl rand -hex 32 > ~/.config/status-agent/token
+cat ~/.config/status-agent/token     # to copy it for step 2
+```
+
+The agent is now configured: `LoadCredential=` in `status-agent.service` reads this file.
+
+**2. Give the same value to the site.**
+
+- *Cloudflare Pages:* in the project, Settings → Variables and Secrets → Add, type *Secret*, name
+  `STATUS_TOKEN`. Or from a terminal: `npx wrangler pages secret put STATUS_TOKEN --project-name <project>`.
+  Secrets apply from the next deployment, so redeploy once.
+- *Self-hosted Podman:* on the machine running the site container, run
+  `podman secret create site-status-token -`, paste the token, press Ctrl-D, then
+  `systemctl --user restart site`. The server reads the secret at startup.
+- *Node without a container:* `STATUS_TOKEN_FILE=/path/to/file npm start`, or `STATUS_TOKEN=…` for a quick test.
+- *Development:* nothing to set; the token is always `dev`.
+
+**3. Check it** from the monitored server:
+
+```sh
+systemctl --user start status-agent && journalctl --user -u status-agent -n 5
+```
+
+No error means the report was accepted; the panel shows it within a couple of minutes.
+
+| Response | Meaning |
+|---|---|
+| `401` | The two tokens differ |
+| `503` | The site has no token configured, or on Cloudflare the `STATUS` KV binding is missing |
+| `422` | The token is right, but the report is malformed (usually an outdated agent script) |
+
+**Rotating it:** write a new value into `~/.config/status-agent/token`, then replace it on the site. On
+Cloudflare, edit the secret and redeploy; on Podman, `podman secret rm site-status-token`, create it again and
+restart the container. Reports sent in between are refused, which only shows on the panel if the gap
+outlasts the offline threshold.
 
 ## Forking
 
