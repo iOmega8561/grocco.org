@@ -2,8 +2,10 @@
   "generatedAt": "2026-11-21T10:00:00Z",
   "host": { "kernel": "6.17.8-arch1-1", "uptimeSeconds": 1893420 },
   "containers": [
-    { "name": "traefik", "state": "running", "health": "healthy", "startedAt": "2026-11-18T08:12:04Z" },
-    { "name": "retroshelf", "state": "running", "health": "healthy", "startedAt": "2026-11-09T19:40:00Z" },
-    { "name": "unbound", "state": "running", "health": null, "startedAt": "2026-10-30T07:02:00Z" }
+    { "name": "traefik", "state": "running", "health": "healthy", "startedAt": "2026-11-18T08:12:04Z", "networks": ["systemd-web", "systemd-media"] },
+    { "name": "retroshelf", "state": "running", "health": "healthy", "startedAt": "2026-11-09T19:40:00Z", "networks": ["systemd-web"] },
+    { "name": "jellyfin", "state": "running", "health": "healthy", "startedAt": "2026-11-12T21:03:00Z", "networks": ["systemd-media"] },
+    { "name": "qbittorrent", "state": "exited", "health": null, "startedAt": null, "networks": ["systemd-media"] },
+    { "name": "unbound", "state": "running", "health": null, "startedAt": "2026-10-30T07:02:00Z", "networks": [] }
   ]
 }

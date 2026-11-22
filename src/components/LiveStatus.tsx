@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useI18n } from "../i18n/context";
 import { site } from "../config/site";
 import { duration, relativeTime } from "../lib/github";
-import type { StatusReport, StatusResponse } from "../../server/status/core.ts";
+import type { ContainerStatus, StatusReport, StatusResponse } from "../../server/status/core.ts";
 import { SelfHostedDiagram } from "./diagrams/SelfHosted";
 
 type State =
@@ -12,6 +12,37 @@ type State =
   | { kind: "ready"; status: StatusReport; receivedAt: Date };
 
 const pollEvery = 60_000;
+
+/** Networks that say nothing about how services are grouped. */
+const ungroupedNetworks = new Set(["podman", "host", "none", "bridge"]);
+
+/** Quadlet names the network of `media.network` "systemd-media"; the panel shows "media". */
+function networkName(network: string): string | null {
+  if (ungroupedNetworks.has(network)) return null;
+  return network.replace(/^systemd-/, "") || null;
+}
+
+type Group = { network: string | null; containers: ContainerStatus[] };
+
+/**
+ * One group per network, by name, with containers on no named network last. A container on
+ * several networks appears in each of them. Null when the agent sends no networks at all.
+ */
+function groupByNetwork(containers: ContainerStatus[]): Group[] | null {
+  if (!containers.some((container) => container.networks !== undefined)) return null;
+  const groups = new Map<string, ContainerStatus[]>();
+  const other: ContainerStatus[] = [];
+  for (const container of containers) {
+    const names = [...new Set((container.networks ?? []).map(networkName).filter((name): name is string => name !== null))];
+    if (names.length === 0) other.push(container);
+    for (const name of names) groups.set(name, [...(groups.get(name) ?? []), container]);
+  }
+  const named: Group[] = [...groups.entries()]
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([network, members]) => ({ network, containers: members }));
+  const all = other.length ? [...named, { network: null, containers: other }] : named;
+  return all.map((group) => ({ ...group, containers: [...group.containers].sort((a, b) => a.name.localeCompare(b.name)) }));
+}
 
 function isStatusResponse(value: unknown): value is StatusResponse {
   const v = value as StatusResponse;
@@ -69,6 +100,19 @@ export function LiveStatus() {
 
   if (!site.statusUrl) return null;
 
+  const groups = state.kind === "ready" ? groupByNetwork(state.status.containers) : null;
+
+  function describe(container: ContainerStatus) {
+    const running = container.state === "running";
+    const healthy = container.health === null || container.health === "healthy";
+    return {
+      dot: running ? (healthy ? "ok" : "warn") : "off",
+      state: running ? t.status.running : t.status.stopped,
+      health: container.health === null ? "" : healthy ? t.status.healthy : t.status.unhealthy,
+      since: running && container.startedAt ? `${t.status.started} ${relativeTime(new Date(container.startedAt), locale)}` : "",
+    };
+  }
+
   return (
     <section className="section page live" aria-labelledby="live-title">
       <h2 id="live-title" className="section-title">
@@ -98,28 +142,54 @@ export function LiveStatus() {
                 <dd>{relativeTime(state.receivedAt, locale)}</dd>
               </div>
             </dl>
-            <table className="live__containers">
-              <caption className="visually-hidden">{t.status.containers}</caption>
-              <tbody>
-                {state.status.containers.map((container) => {
-                  const running = container.state === "running";
-                  const healthy = container.health === null || container.health === "healthy";
-                  return (
-                    <tr key={container.name}>
-                      <th scope="row">
-                        <span className="live__dot" data-state={running ? (healthy ? "ok" : "warn") : "off"} aria-hidden="true" />
-                        {container.name}
-                      </th>
-                      <td>{running ? t.status.running : t.status.stopped}</td>
-                      <td>{container.health === null ? "" : healthy ? t.status.healthy : t.status.unhealthy}</td>
-                      <td className="live__since">
-                        {running && container.startedAt ? `${t.status.started} ${relativeTime(new Date(container.startedAt), locale)}` : ""}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+            {groups ? (
+              <div className="live__groups">
+                {groups.map((group) => (
+                  <section
+                    key={group.network ?? ""}
+                    className="live__group"
+                    aria-label={group.network ? t.status.network(group.network) : t.status.otherContainers}
+                  >
+                    <h3 className={`live__group-name${group.network ? "" : " live__group-name--other"}`}>
+                      {group.network ?? t.status.otherContainers}
+                    </h3>
+                    <ul className="live__list">
+                      {group.containers.map((container) => {
+                        const row = describe(container);
+                        return (
+                          <li key={container.name} className="live__item">
+                            <span className="live__dot" data-state={row.dot} aria-hidden="true" />
+                            <span className="live__name">{container.name}</span>
+                            <span className="live__state">{row.health ? `${row.state} · ${row.health}` : row.state}</span>
+                            {row.since && <span className="live__item-since">{row.since}</span>}
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </section>
+                ))}
+              </div>
+            ) : (
+              <table className="live__containers">
+                <caption className="visually-hidden">{t.status.containers}</caption>
+                <tbody>
+                  {state.status.containers.map((container) => {
+                    const row = describe(container);
+                    return (
+                      <tr key={container.name}>
+                        <th scope="row">
+                          <span className="live__dot" data-state={row.dot} aria-hidden="true" />
+                          {container.name}
+                        </th>
+                        <td>{row.state}</td>
+                        <td>{row.health}</td>
+                        <td className="live__since">{row.since}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            )}
           </>
         )}
       </div>

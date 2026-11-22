@@ -42,6 +42,8 @@ export const it: Messages = {
     uptime: "Server acceso da",
     updated: "Aggiornato",
     containers: "Container",
+    network: (name: string) => `Rete ${name}`,
+    otherContainers: "Altri container",
     started: "avviato",
     kernel: "Kernel",
   },

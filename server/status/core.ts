@@ -13,6 +13,8 @@ export type ContainerStatus = {
   state: string;
   health: string | null;
   startedAt: string | null;
+  /** The networks the container is attached to. Optional: agents that do not send it still work. */
+  networks?: string[];
 };
 
 /** What status-agent.sh sends. */
@@ -49,6 +51,7 @@ type Stored = { receivedAt: string; report: StatusReport };
 
 const maxBodyBytes = 16 * 1024;
 const maxContainers = 64;
+const maxNetworks = 16;
 const maxText = 128;
 
 export const defaultStaleAfterSeconds = 15 * 60;
@@ -146,7 +149,12 @@ function sanitize(value: unknown): StatusReport | null {
     if (!isObject(item) || !isText(item.name) || !isText(item.state)) return null;
     if (item.health !== null && !isText(item.health)) return null;
     if (item.startedAt !== null && !isText(item.startedAt)) return null;
-    containers.push({ name: item.name, state: item.state, health: item.health, startedAt: item.startedAt });
+    const container: ContainerStatus = { name: item.name, state: item.state, health: item.health, startedAt: item.startedAt };
+    if (item.networks !== undefined) {
+      if (!Array.isArray(item.networks) || item.networks.length > maxNetworks || !item.networks.every(isText)) return null;
+      container.networks = [...new Set(item.networks as string[])];
+    }
+    containers.push(container);
   }
   return {
     generatedAt: value.generatedAt,

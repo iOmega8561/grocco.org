@@ -41,6 +41,8 @@ export const en = {
     uptime: "Server up for",
     updated: "Reported",
     containers: "Containers",
+    network: (name: string) => `Network ${name}`,
+    otherContainers: "Other containers",
     started: "started",
     kernel: "Kernel",
   },

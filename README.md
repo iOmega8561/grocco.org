@@ -140,7 +140,11 @@ the server it is meant to report on.
 ### The status agent
 
 On the monitored server, a systemd timer runs `deploy/status/status-agent.sh` every 5 minutes. It reads
-`podman ps`, keeps only the containers named in `STATUS_CONTAINERS`, and sends the report with curl. It needs
+`podman ps`, keeps only the containers named in `STATUS_CONTAINERS`, and sends the report with curl. Each
+container carries the networks it is attached to, and the panel groups containers by network: one group per
+network, a container repeated in every network it joins, Quadlet's `systemd-` prefix left out, and containers
+on no named network (or only Podman's default one) shown last. Reports without networks are shown as a
+single list. It needs
 podman, jq and curl, and makes no inbound connection possible. Create the token first (see
 [Setting up the token](#setting-up-the-token)).
 

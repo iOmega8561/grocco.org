@@ -37,7 +37,7 @@ report="$(
             $names[] as $name
             | (map(select(.Names | index($name))) | first) as $c
             | if $c == null then
-                { name: $name, state: "missing", health: null, startedAt: null }
+                { name: $name, state: "missing", health: null, startedAt: null, networks: [] }
               else
                 {
                   name: $name,
@@ -49,7 +49,8 @@ report="$(
                       elif ($s | test("\\(starting\\)"))  then "starting"
                       else null end
                   ),
-                  startedAt: (if ($c.StartedAt // 0) > 0 then ($c.StartedAt | todate) else null end)
+                  startedAt: (if ($c.StartedAt // 0) > 0 then ($c.StartedAt | todate) else null end),
+                  networks: ($c.Networks // [])
                 }
               end
           ]
