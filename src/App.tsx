@@ -3,6 +3,7 @@ import { preferredLanguage } from "./i18n/languages";
 import { Layout } from "./pages/Layout";
 import { Home } from "./pages/Home";
 import { ProjectPage } from "./pages/ProjectPage";
+import { CvPage } from "./pages/CvPage";
 import { NotFound } from "./pages/NotFound";
 
 const router = createBrowserRouter([
@@ -13,6 +14,7 @@ const router = createBrowserRouter([
     children: [
       { index: true, element: <Home /> },
       { path: "work/:slug", element: <ProjectPage /> },
+      { path: "cv", element: <CvPage /> },
       { path: "*", element: <NotFound /> },
     ],
   },
