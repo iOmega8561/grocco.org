@@ -1,9 +1,9 @@
 # grocco.org
 
-My personal site: projects, résumé and a live view of the server my services run on.
-React 19 and TypeScript on Vite, no UI framework, no CSS framework.
+The source of [grocco.org](https://grocco.org), Giuseppe Rocco's personal site: projects, résumé and a live view
+of the server his services run on. React 19 and TypeScript on Vite, no UI framework, no CSS framework.
 
-## Run it
+## Running locally
 
 ```sh
 npm install
@@ -18,7 +18,7 @@ Node 22 or later. Dependencies are pinned to exact versions.
 
 Every file in `src/content/projects/` is a project, discovered automatically.
 
-- **Add:** copy an existing file, give it a new `slug`, and edit it. That's all.
+- **Add:** create a file that default-exports `defineProject({ … })` (see `src/content/types.ts`) with a unique `slug`.
 - **Remove:** delete the file, or set `hidden: true` to keep it for later.
 - **Reorder:** change `order`. Lower comes first; gaps are fine.
 - **Feature:** `featured: true` puts it on the black panel of the home page (the first one wins).
@@ -42,7 +42,7 @@ A project page is a list of blocks, rendered in order:
 `layers` decides which slabs of the home page stack lead to the project.
 `repo` makes the build fetch its stars and last update from GitHub.
 
-Videos are H.264 MP4 with `+faststart` and no audio track. To prepare one from a screen recording:
+Videos are H.264 MP4 with `+faststart` and no audio track. A screen recording can be prepared with:
 
 ```sh
 ffmpeg -i input.mov -vf "crop=W:H:X:Y,scale=1212:-2,fps=30,format=yuv420p" -an \
@@ -57,10 +57,12 @@ English and Italian today. To add one:
 2. add `src/i18n/messages/<code>.ts` (TypeScript lists any missing string);
 3. register it in `src/i18n/messages/index.ts`.
 
-Projects, profile and résumé can be translated whenever you like: a missing language falls back to English.
+Projects, profile and résumé can be translated independently: a missing language falls back to English.
 Routes are `/<lang>/…`; `/` sends visitors to the language their browser prefers.
 
-## Your details
+## Personal details
+
+Everything specific to one person lives in three places:
 
 - `src/config/site.ts`: e-mail, LinkedIn, PDF résumé, source link. Empty values are hidden.
 - `src/content/cv.ts`: experience, education, certifications. Fields marked `TODO` are hidden while empty.
@@ -83,9 +85,9 @@ higher rate limit. Stars are shown from 5 upwards.
 `public/_redirects` routes every path to the app; `public/_headers` sets the security headers. If the
 status endpoint is not on `status.grocco.org`, update `connect-src` there.
 
-### The live status: your server
+### The live status: a home server
 
-Nothing is exposed at home. A systemd timer writes a small JSON file; a Caddy container serves it on a private
+No port is opened on the server. A systemd timer writes a small JSON file; a Caddy container serves it on a private
 Podman network; cloudflared carries it out through a Cloudflare Tunnel.
 
 ```
@@ -116,7 +118,23 @@ In the Cloudflare dashboard, route the tunnel's public hostname `status.grocco.o
 
 If the server is off, the panel says so and the rest of the site is unaffected.
 
-### Everything at home (optional)
+### Self-hosting the whole site (optional)
 
 `deploy/site/` builds the site into a Caddy image and runs it with Quadlet on the same private network, so
 the tunnel can serve the whole site too.
+
+## Forking
+
+Forks are welcome. Before publishing one:
+
+- replace the files listed in `LICENSE-CONTENT.md` (profile, résumé, projects, media) with your own;
+- update `src/config/site.ts`, the `<title>` and description in `index.html`, and every `grocco.org` hostname
+  in `public/_headers` and `deploy/`.
+
+## License
+
+The source code is released under the [Mozilla Public License 2.0](LICENSE): it can be used in any project,
+open or closed, but changes to files of this repository must be shared under the same license.
+
+The personal content (texts, résumé, images and videos) is not open source and stays all rights reserved.
+See [LICENSE-CONTENT.md](LICENSE-CONTENT.md) for the exact list of files.

@@ -1,5 +1,5 @@
 /**
- * Everything about you that is not a project. Empty strings hide the matching link.
+ * Personal details that are not projects. Empty strings hide the matching link.
  */
 export const site = {
   name: "Giuseppe Rocco",

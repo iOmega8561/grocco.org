@@ -5,7 +5,7 @@
  *   1. add it here (the order is the order of the language switch);
  *   2. create `messages/<code>.ts`, typed as `Messages`;
  *   3. register the messages in `messages/index.ts`.
- * Project content can be translated whenever you like: any language a project
+ * Project content can be translated independently: any language a project
  * does not provide falls back to `defaultLanguage`.
  */
 export const languages = {
