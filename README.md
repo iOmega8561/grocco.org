@@ -8,11 +8,19 @@ of the server his services run on. React 19 and TypeScript on Vite, no UI framew
 ```sh
 npm install
 npm run dev                                   # http://localhost:5173
-VITE_STATUS_URL=/__status.json npm run dev    # with the live panel, fed by dev/status.sample.json
+VITE_STATUS_URL=/api/status npm run dev       # with the live panel, seeded from dev/status.sample.json
 npm run build                                 # GitHub sync, type check, production build in dist/
+npm run build:server && npm start             # the self-hosted server, serving dist/ on port 8080
 ```
 
 Node 22 or later. Dependencies are pinned to exact versions.
+
+In development, `/api/status` is the real endpoint with an in-memory store and the token `dev`, so the panel's
+states can be tried by hand:
+
+```sh
+curl -X PUT -H "Authorization: Bearer dev" --data-binary @dev/status.sample.json http://localhost:5173/api/status
+```
 
 ## Add, change or remove a project
 
@@ -76,60 +84,89 @@ higher rate limit. Stars are shown from 5 upwards.
 
 ## Deployment
 
-### The site: Cloudflare Pages
+The site is static, apart from one endpoint: `/api/status`. A server sends it a report every few minutes, and
+the live panel shows the last one. When no report has arrived for `STATUS_STALE_AFTER` seconds (15 minutes by
+default), the panel shows the server as off. The endpoint's logic lives in `server/status/core.ts`, written
+against the web-standard `Request` and `Response`, so the same code runs on both targets below.
+
+| | Reads | Writes |
+|---|---|---|
+| `GET /api/status` | anyone | — |
+| `PUT /api/status` | — | `Authorization: Bearer <token>`, a JSON report of at most 16 kB |
+
+The time of a report is when the endpoint received it, not the sender's clock. Only known fields are kept.
+While no token is configured, every update is refused.
+
+### Option 1: Cloudflare Pages
 
 - Build command: `npm run build`
 - Output directory: `dist`
-- Environment: `NODE_VERSION=22`, `VITE_STATUS_URL=https://status.grocco.org/status.json`, optionally `GITHUB_TOKEN`
+- Environment variables: `NODE_VERSION=22`, `VITE_STATUS_URL=/api/status`, optionally `GITHUB_TOKEN`
+- Bindings: a Workers KV namespace bound as `STATUS`
+- Secrets: `STATUS_TOKEN`, and optionally `STATUS_STALE_AFTER` in seconds
 
-`public/_redirects` routes every path to the app; `public/_headers` sets the security headers. If the
-status endpoint is not on `status.grocco.org`, update `connect-src` there.
+`functions/api/status.ts` becomes the endpoint automatically. `public/_redirects` routes every other path to
+the app, and `public/_headers` sets the security headers.
 
-### The live status: a home server
+The free Workers KV plan allows 1,000 writes a day: one report every 5 minutes uses 288 of them.
 
-No port is opened on the server. A systemd timer writes a small JSON file; a Caddy container serves it on a private
-Podman network; cloudflared carries it out through a Cloudflare Tunnel.
+### Option 2: self-hosted, rootless Podman behind Traefik
 
+`deploy/site/Containerfile` builds the site and a dependency-free Node server (`server/node/`) that serves it,
+applies the same `public/_headers` rules and answers `/api/status`, keeping the last report in a file. The
+final image is distroless: no shell, no package manager, a non-root user, nothing writable but `/data`.
+
+```sh
+podman build -f deploy/site/Containerfile -t localhost/grocco-site:latest .
+openssl rand -hex 32 | tee /dev/stderr | podman secret create site-status-token -
+install -Dm644 deploy/site/site.container -t ~/.config/containers/systemd/
+systemctl --user daemon-reload
+systemctl --user start site
 ```
-deploy/status/
-  status-agent.sh         reads `podman ps`, writes status.json atomically (needs jq)
-  status-agent.service    STATUS_CONTAINERS: the only containers that are published
-  status-agent.timer      every 30 seconds
-  status.network          private network, no published ports
-  Caddyfile               serves /status.json only, with CORS for the site's origin
-  status-web.container    Caddy, read-only, no capabilities
-  cloudflared.container   the tunnel; its token is a Podman secret
-```
+
+`site.container` runs it read-only, with no capabilities, no privilege escalation and bounded memory and
+processes; the token arrives as a Podman secret readable only by the server's user. It expects:
+
+- a `traefik.network` Quadlet unit shared with Traefik (Podman names it `systemd-traefik`);
+- Traefik's Docker provider reading the rootless Podman socket, with a `websecure` entrypoint and a
+  `letsencrypt` certificate resolver. Adjust the `Label=` lines to match a different setup.
+
+Traefik terminates TLS and compresses responses; the container publishes no port on the host.
+
+Host the site on a machine other than the one it monitors: if they are the same, the panel goes down with
+the server it is meant to report on.
+
+### The status agent
+
+On the monitored server, a systemd timer runs `deploy/status/status-agent.sh` every 5 minutes. It reads
+`podman ps`, keeps only the containers named in `STATUS_CONTAINERS`, and sends the report with curl. It needs
+podman, jq and curl, and makes no inbound connection possible.
 
 ```sh
 install -Dm755 deploy/status/status-agent.sh ~/.local/bin/status-agent.sh
 install -Dm644 deploy/status/status-agent.{service,timer} -t ~/.config/systemd/user/
-install -Dm644 deploy/status/{status.network,status-web.container,cloudflared.container} -t ~/.config/containers/systemd/
-install -Dm644 deploy/status/Caddyfile ~/.config/status-web/Caddyfile
-printf '%s' "<tunnel token>" | podman secret create cloudflared-token -
+install -Dm600 /dev/null ~/.config/status-agent/token
+printf '%s' "<the same token as the site>" > ~/.config/status-agent/token
 
 systemctl --user daemon-reload
 systemctl --user enable --now status-agent.timer
-systemctl --user start status-web cloudflared
 loginctl enable-linger "$USER"
 ```
 
-In the Cloudflare dashboard, route the tunnel's public hostname `status.grocco.org` to `http://status-web:8080`.
+Set `STATUS_ENDPOINT` and `STATUS_CONTAINERS` in `status-agent.service`. The token reaches the script through
+systemd's `LoadCredential=`, never through the environment or the command line. On a systemd too old for
+credentials in user services, replace that line with `Environment=STATUS_TOKEN_FILE=%h/.config/status-agent/token`.
 
-If the server is off, the panel says so and the rest of the site is unaffected.
-
-### Self-hosting the whole site (optional)
-
-`deploy/site/` builds the site into a Caddy image and runs it with Quadlet on the same private network, so
-the tunnel can serve the whole site too.
+Check a run with `systemctl --user start status-agent && journalctl --user -u status-agent -n 20`.
 
 ## Forking
 
 Forks are welcome. Before publishing one:
 
 - replace the files listed in `LICENSE-CONTENT.md` (profile, résumé, projects, media) with your own;
-- update `src/config/site.ts`, the `<title>` and description in `index.html`, and every `grocco.org` hostname
-  in `public/_headers` and `deploy/`.
+- update `src/config/site.ts` and the `<title>` and description in `index.html`;
+- point `STATUS_ENDPOINT` in `deploy/status/status-agent.service` and the `Host()` rule in
+  `deploy/site/site.container` at your own domain.
 
 ## License
 

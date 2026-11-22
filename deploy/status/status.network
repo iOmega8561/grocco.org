@@ -1,5 +1,0 @@
-# ~/.config/containers/systemd/status.network
-# A private network: cloudflared reaches status-web by name, and no port is published on the host.
-[Network]
-NetworkName=status
-Internal=false

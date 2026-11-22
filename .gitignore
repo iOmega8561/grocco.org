@@ -34,10 +34,9 @@ coverage/
 .env
 .env.*
 !.env.example
-# Cloudflare: Wrangler state and tunnel credentials
+# Cloudflare: Wrangler state and local secrets
 .wrangler/
 .dev.vars
-cloudflared-token*
 cert.pem
 *.pem
 *.key

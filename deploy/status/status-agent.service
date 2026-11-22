@@ -1,13 +1,14 @@
 # ~/.config/systemd/user/status-agent.service
 [Unit]
-Description=Write the public status document for the website
+Description=Send the server status report to the website
 
 [Service]
 Type=oneshot
-# Space-separated: the only containers whose state is published.
-Environment=STATUS_CONTAINERS=cloudflared status-web retroshelf
-Environment=STATUS_DIR=%h/.local/share/status
+Environment=STATUS_ENDPOINT=https://grocco.org/api/status
+# Space-separated: the only containers whose state is reported.
+Environment=STATUS_CONTAINERS=traefik retroshelf
+# The token never sits in an environment variable: systemd hands the file to the service.
+LoadCredential=status-token:%h/.config/status-agent/token
 ExecStart=%h/.local/bin/status-agent.sh
-# The agent only reads Podman's state and writes one file.
 NoNewPrivileges=true
 PrivateTmp=true

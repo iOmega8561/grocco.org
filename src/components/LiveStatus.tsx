@@ -2,27 +2,32 @@ import { useEffect, useState } from "react";
 import { useI18n } from "../i18n/context";
 import { site } from "../config/site";
 import { duration, relativeTime } from "../lib/github";
+import type { StatusReport, StatusResponse } from "../../server/status/core.ts";
 import { SelfHostedDiagram } from "./diagrams/SelfHosted";
 
-/** The document written by deploy/status/status-agent.sh. */
-export type StatusDocument = {
-  generatedAt: string;
-  host: { kernel: string; uptimeSeconds: number };
-  containers: { name: string; state: string; health: string | null; startedAt: string | null }[];
-};
+type State =
+  | { kind: "loading" }
+  | { kind: "unreachable" }
+  | { kind: "offline"; lastSeen: Date | null }
+  | { kind: "ready"; status: StatusReport; receivedAt: Date };
 
-type State = { kind: "loading" } | { kind: "offline" } | { kind: "ready"; status: StatusDocument; readAt: Date };
+const pollEvery = 60_000;
 
-const pollEvery = 30_000;
+function isStatusResponse(value: unknown): value is StatusResponse {
+  const v = value as StatusResponse;
+  return typeof v === "object" && v !== null && typeof v.online === "boolean" && (v.report === null || Array.isArray(v.report?.containers));
+}
 
-function isStatusDocument(value: unknown): value is StatusDocument {
-  const v = value as StatusDocument;
-  return typeof v === "object" && v !== null && typeof v.generatedAt === "string" && Array.isArray(v.containers) && typeof v.host === "object";
+/** Turns the endpoint's answer into what the panel shows: the server is off when its last report is too old. */
+function toState(body: StatusResponse): State {
+  const receivedAt = body.receivedAt ? new Date(body.receivedAt) : null;
+  if (body.online && body.report && receivedAt) return { kind: "ready", status: body.report, receivedAt };
+  return { kind: "offline", lastSeen: receivedAt };
 }
 
 /**
- * Reads the state of the server this site runs on. Shown only when VITE_STATUS_URL is set,
- * and polls only while the page is visible.
+ * Shows the last report the server sent to /api/status (see deploy/status). Shown only when
+ * VITE_STATUS_URL is set, and polls only while the page is visible.
  */
 export function LiveStatus() {
   const { t, locale } = useI18n();
@@ -42,10 +47,10 @@ export function LiveStatus() {
         const response = await fetch(site.statusUrl, { cache: "no-store", signal: controller.signal });
         if (!response.ok) throw new Error(String(response.status));
         const body: unknown = await response.json();
-        if (!isStatusDocument(body)) throw new Error("unexpected document");
-        if (!cancelled) setState({ kind: "ready", status: body, readAt: new Date() });
+        if (!isStatusResponse(body)) throw new Error("unexpected document");
+        if (!cancelled) setState(toState(body));
       } catch (error) {
-        if (!cancelled && (error as Error).name !== "AbortError") setState({ kind: "offline" });
+        if (!cancelled && (error as Error).name !== "AbortError") setState({ kind: "unreachable" });
       }
     }
 
@@ -73,7 +78,10 @@ export function LiveStatus() {
 
       <div className="live__panel" aria-live="polite" aria-busy={state.kind === "loading"}>
         {state.kind === "loading" && <p className="live__message">{t.status.loading}</p>}
-        {state.kind === "offline" && <p className="live__message">{t.status.offline}</p>}
+        {state.kind === "unreachable" && <p className="live__message">{t.status.unreachable}</p>}
+        {state.kind === "offline" && (
+          <p className="live__message">{state.lastSeen ? t.status.offline(relativeTime(state.lastSeen, locale)) : t.status.never}</p>
+        )}
         {state.kind === "ready" && (
           <>
             <dl className="live__host">
@@ -87,7 +95,7 @@ export function LiveStatus() {
               </div>
               <div>
                 <dt>{t.status.updated}</dt>
-                <dd>{relativeTime(new Date(state.status.generatedAt), locale)}</dd>
+                <dd>{relativeTime(state.receivedAt, locale)}</dd>
               </div>
             </dl>
             <table className="live__containers">

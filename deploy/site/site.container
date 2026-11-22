@@ -1,25 +1,59 @@
 # ~/.config/containers/systemd/site.container
+#
+# The site behind Traefik, rootless. Before the first start:
+#
+#   podman build -f deploy/site/Containerfile -t localhost/grocco-site:latest .
+#   openssl rand -hex 32 | podman secret create site-status-token -
+#
+# The same token goes on the monitored server, in ~/.config/status-agent/token.
+
 [Unit]
-Description=Personal website
+Description=grocco.org: site and status endpoint
 
 [Container]
 Image=localhost/grocco-site:latest
 ContainerName=site
-Network=status.network
-# Behind cloudflared on the same network; no host port needed.
 
+# The network Traefik shares with the services it routes to; no host port is published.
+Network=traefik.network
+
+# Traefik reads these through its Docker provider pointed at the Podman socket.
+Label=traefik.enable=true
+Label=traefik.docker.network=systemd-traefik
+Label=traefik.http.routers.site.rule=Host(`grocco.org`)
+Label=traefik.http.routers.site.entrypoints=websecure
+Label=traefik.http.routers.site.tls.certresolver=letsencrypt
+Label=traefik.http.routers.site.middlewares=site-compress
+Label=traefik.http.middlewares.site-compress.compress=true
+Label=traefik.http.services.site.loadbalancer.server.port=8080
+
+# The agent's token, readable only by the server's user; never in the environment.
+Secret=site-status-token,type=mount,target=/run/secrets/status-token,uid=65532,gid=65532,mode=0400
+Environment=STATUS_TOKEN_FILE=/run/secrets/status-token
+# Seconds without a report before the server counts as off.
+Environment=STATUS_STALE_AFTER=900
+
+# The last report survives restarts; :U hands the volume to the container's user.
+Volume=site-status:/data:U
+
+# Least privilege: read-only image, no capabilities, no privilege escalation, bounded resources.
+User=65532
+Group=65532
 ReadOnly=true
-Tmpfs=/data
-Tmpfs=/config
 DropCapability=ALL
 NoNewPrivileges=true
+PidsLimit=64
+PodmanArgs=--memory=128m --cpus=1
 
-HealthCmd=wget -q -O /dev/null http://127.0.0.1:8080/
-HealthInterval=60s
+HealthCmd=["CMD", "/nodejs/bin/node", "/app/server/node/healthcheck.js"]
+HealthInterval=30s
+HealthTimeout=5s
+HealthRetries=3
+HealthStartPeriod=10s
 
 [Service]
 Restart=on-failure
-MemoryMax=96M
+TimeoutStartSec=120
 
 [Install]
 WantedBy=default.target

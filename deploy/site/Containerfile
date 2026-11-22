@@ -1,19 +1,33 @@
-# Optional: the whole site from your own server instead of Cloudflare Pages.
-#   podman build -f deploy/site/Containerfile -t localhost/grocco-site:latest \
-#     --build-arg VITE_STATUS_URL=https://status.grocco.org/status.json .
+# Self-hosted site: the built pages and the /api/status endpoint, served by one Node process.
+#
+#   podman build -f deploy/site/Containerfile -t localhost/grocco-site:latest .
+#
+# The final image is distroless: no shell, no package manager, no npm. It runs as an unprivileged
+# user (65532), reads only what is baked into it and writes only to /data, the status volume.
 
-FROM docker.io/library/node:22-alpine AS build
+FROM docker.io/library/node:24.22.3-trixie-slim AS build
 WORKDIR /src
 COPY package.json package-lock.json ./
 RUN npm ci --no-audit --no-fund
 COPY . .
-ARG VITE_STATUS_URL=""
+# The panel reads the endpoint on the same origin. Pass --build-arg VITE_STATUS_URL= to build without it.
+ARG VITE_STATUS_URL=/api/status
 ENV VITE_STATUS_URL=${VITE_STATUS_URL}
 # build:offline skips the GitHub sync, so the image builds without network surprises;
 # run `npm run sync` before building to refresh the committed stats.
-RUN npm run build:offline
+RUN npm run build:offline \
+ && npm run build:server \
+ && printf '{ "type": "module" }\n' > build/server/package.json
 
-FROM docker.io/library/caddy:2-alpine
-COPY deploy/site/Caddyfile /etc/caddy/Caddyfile
-COPY --from=build /src/dist /srv
+FROM gcr.io/distroless/nodejs24-debian13:nonroot
+WORKDIR /app
+# Owned by root and not writable by the user the server runs as.
+COPY --from=build --chown=0:0 /src/dist ./dist
+COPY --from=build --chown=0:0 /src/build/server ./server
+ENV NODE_ENV=production \
+    PORT=8080 \
+    DIST_DIR=/app/dist \
+    STATUS_FILE=/data/status.json
+USER 65532:65532
 EXPOSE 8080
+CMD ["/app/server/node/main.js"]

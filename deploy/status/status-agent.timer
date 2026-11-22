@@ -1,11 +1,13 @@
 # ~/.config/systemd/user/status-agent.timer
 [Unit]
-Description=Refresh the public status document every 30 seconds
+Description=Send the server status report every 5 minutes
 
 [Timer]
-OnBootSec=30s
-OnUnitActiveSec=30s
-AccuracySec=5s
+# Every 5 minutes is 288 reports a day: within the 1,000 daily writes of the free Workers KV plan.
+# Keep it well below the site's offline threshold (STATUS_STALE_AFTER, 15 minutes by default).
+OnBootSec=1min
+OnUnitActiveSec=5min
+AccuracySec=15s
 
 [Install]
 WantedBy=timers.target
