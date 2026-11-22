@@ -13,7 +13,7 @@ export const site = {
   /** Optional: the public repository of this site. While empty, the footer link is hidden. */
   sourceRepo: "",
   /** Optional: a PDF in `public/`, e.g. "/giuseppe-rocco-cv.pdf". While empty, the download button is hidden. */
-  cvPdf: "",
+  cvPdf: "/giuseppe-rocco-cv.pdf",
   /**
    * Where the live status JSON is served (see `deploy/status`). Set it at build time with
    * VITE_STATUS_URL. While empty, the live section is not shown at all.
