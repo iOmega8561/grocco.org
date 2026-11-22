@@ -1,0 +1,60 @@
+/** Interface wording. Every language file must have exactly these keys. */
+export const en = {
+  meta: {
+    title: "Giuseppe Rocco: systems and software engineer",
+    description:
+      "Giuseppe Rocco builds software from the system up: virtualization on macOS, rootless containers on Linux, Swift and full-stack applications.",
+  },
+  nav: { work: "Projects", cv: "Résumé", home: "Home", language: "Language", skip: "Skip to content" },
+  stack: {
+    hint: "Choose a layer to see the projects that reach it.",
+    projects: (n: number) => (n === 1 ? "1 project" : `${n} projects`),
+    showAll: "Show all projects",
+    filtered: (layer: string) => `Projects that reach the ${layer.toLowerCase()} layer`,
+  },
+  work: { title: "Projects", all: "All projects" },
+  featured: { cta: "See how it works" },
+  project: {
+    source: "Source code",
+    appStore: "Mac App Store",
+    website: "Website",
+    docs: "Documentation",
+    stars: (n: number) => (n === 1 ? "1 star" : `${n} stars`),
+    updated: "updated",
+    next: "Next project",
+    back: "All projects",
+    stack: "Built with",
+    years: "Years",
+    layers: "Layers",
+  },
+  status: {
+    title: "This site, right now",
+    body: "The pages come from Cloudflare Pages, but my services run on a server at home, in rootless Podman containers that systemd starts through Quadlet. This panel reads their state live, through a tunnel.",
+    loading: "Reading the server state",
+    offline: "The server is not answering right now. The rest of the site is unaffected: it comes from Cloudflare.",
+    running: "running",
+    stopped: "stopped",
+    healthy: "healthy",
+    unhealthy: "unhealthy",
+    uptime: "Server up for",
+    updated: "Read",
+    containers: "Containers",
+    started: "started",
+    kernel: "Kernel",
+  },
+  cv: {
+    title: "Résumé",
+    download: "Download the PDF",
+    experience: "Experience",
+    education: "Education",
+    certifications: "Certifications",
+    languages: "Languages",
+    atWork: "At work, no public code",
+    evidence: "Skills, with the proof",
+    evidenceIntro: "Each skill links to the projects where you can check it in the code.",
+  },
+  footer: { source: "This site is open source", contact: "Write to me", madeWith: "React, TypeScript and a lot of attention to detail." },
+  notFound: { title: "This page does not exist.", body: "The address may be mistyped, or the page may have moved.", home: "Go to the home page" },
+};
+
+export type Messages = typeof en;
