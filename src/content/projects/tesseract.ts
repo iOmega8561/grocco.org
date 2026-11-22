@@ -35,8 +35,8 @@ export default defineProject({
       blocks: [
         {
           type: "media",
-          src: "/media/tesseract-tahoe.webp",
-          srcDark: "/media/tesseract-tahoe-dark.webp",
+          src: "/media/tesseract-stack.webp",
+          srcDark: "/media/tesseract-stack-dark.webp",
           alt: "A macOS Tahoe virtual machine running in a Tesseract console window.",
           frame: "bare",
         },
@@ -100,8 +100,8 @@ export default defineProject({
       blocks: [
         {
           type: "media",
-          src: "/media/tesseract-tahoe.webp",
-          srcDark: "/media/tesseract-tahoe-dark.webp",
+          src: "/media/tesseract-stack.webp",
+          srcDark: "/media/tesseract-stack-dark.webp",
           alt: "Una macchina virtuale macOS Tahoe in esecuzione in una finestra di Tesseract.",
           frame: "bare",
         },
