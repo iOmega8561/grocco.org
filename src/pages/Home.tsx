@@ -9,6 +9,7 @@ import { Featured } from "../components/Featured";
 import { ProjectIndex } from "../components/ProjectIndex";
 import { Principles } from "../components/Principles";
 import { Timeline } from "../components/Timeline";
+import { LiveStatus } from "../components/LiveStatus";
 
 export function Home() {
   const { lang, t } = useI18n();
@@ -37,6 +38,7 @@ export function Home() {
       <ProjectIndex layer={layer} onClear={() => select(null)} />
       <Timeline />
       <Principles />
+      <LiveStatus />
     </>
   );
 }
