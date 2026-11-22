@@ -108,3 +108,10 @@
 :root[data-theme="dark"] .accented {
   --accent: var(--accent-dark);
 }
+
+/* Small mobile devices may not digest step5 easily */
+@media (max-width: 767px) {
+  :root {
+    --step-5: var(--step-4);
+  }
+}
