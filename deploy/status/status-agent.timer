@@ -1,0 +1,11 @@
+# ~/.config/systemd/user/status-agent.timer
+[Unit]
+Description=Refresh the public status document every 30 seconds
+
+[Timer]
+OnBootSec=30s
+OnUnitActiveSec=30s
+AccuracySec=5s
+
+[Install]
+WantedBy=timers.target

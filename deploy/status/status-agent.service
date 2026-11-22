@@ -1,0 +1,13 @@
+# ~/.config/systemd/user/status-agent.service
+[Unit]
+Description=Write the public status document for the website
+
+[Service]
+Type=oneshot
+# Space-separated: the only containers whose state is published.
+Environment=STATUS_CONTAINERS=cloudflared status-web retroshelf
+Environment=STATUS_DIR=%h/.local/share/status
+ExecStart=%h/.local/bin/status-agent.sh
+# The agent only reads Podman's state and writes one file.
+NoNewPrivileges=true
+PrivateTmp=true

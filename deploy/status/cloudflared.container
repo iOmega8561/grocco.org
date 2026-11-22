@@ -1,0 +1,28 @@
+# ~/.config/containers/systemd/cloudflared.container
+#
+# Create the tunnel in the Cloudflare dashboard, route status.grocco.org to
+# http://status-web:8080, then store its token as a Podman secret:
+#   printf '%s' "<token>" | podman secret create cloudflared-token -
+[Unit]
+Description=Cloudflare Tunnel for the status endpoint
+After=status-web.service
+Wants=status-web.service
+
+[Container]
+Image=docker.io/cloudflare/cloudflared:latest
+AutoUpdate=registry
+ContainerName=cloudflared
+Network=status.network
+Exec=tunnel --no-autoupdate run
+Secret=cloudflared-token,type=env,target=TUNNEL_TOKEN
+
+ReadOnly=true
+DropCapability=ALL
+NoNewPrivileges=true
+
+[Service]
+Restart=always
+MemoryMax=128M
+
+[Install]
+WantedBy=default.target
