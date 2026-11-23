@@ -48,6 +48,48 @@ const pci = `def __parse_pci(gfxd):
 
     return []`;
 
+const linux = `class pacman:
+    """Executable: pacman"""
+
+    # sudo pacman -S pkgs
+    @staticmethod
+    def S(pkgs: list):
+        """Command: pacman -S %s --noconfirm --needed"""
+
+        try:
+
+            with open(f"{logpath}/pacman.log", "a", encoding="utf-8") as log:
+
+                # Invoke subprocess
+                subprocess.run(
+                    ["sudo", "pacman", "-S", "--noconfirm", "--needed"] + pkgs,
+                    stdout = log,
+                    stderr = subprocess.STDOUT,
+                    check  = True,
+                    text   = True
+                )
+
+            # Return true for success
+            return True
+        except subprocess.CalledProcessError:
+
+            # Return false for failure
+            return False
+
+class paru:
+    """Executable: paru"""
+
+    @staticmethod
+    def setup():
+        # …
+        if pacman.Qs(["paru"]):
+            return True
+
+        if not clone("https://aur.archlinux.org/paru") or not makepkg.sir("paru"):
+            return False
+
+        return True`;
+
 export default defineProject({
   slug: "archibald",
   name: "Archibald",
@@ -93,9 +135,27 @@ export default defineProject({
         { type: "code", title: "Drivers, from the hardware it finds", file: "functions/setup.py", language: "python", code: pci },
         {
           type: "prose",
+          title: "Commands that read like commands",
+          paragraphs: [
+            "Everything Archibald does to the system goes through one module, linux.py. Each executable is a class named after it, and each method after its flags: pacman.S, pacman.Qs, usermod.aG, makepkg.sir. The module breaks PEP 8 on purpose, so that reading the setup reads like the shell session it replaces.",
+            "Arguments travel as lists, straight to the executable, so a package or group name can’t turn into a command; only the custom commands a profile spells out go through bash. Each wrapper writes its output to a log of its own, pacman.log, systemctl.log, paru.log, and returns true or false instead of raising: the setup decides what is fatal, and the terminal stays readable.",
+            "Tools arrive when they’re first needed. lspci installs pciutils, cloning installs git, Flatpak installs itself, and paru is built from the AUR with makepkg the first time a profile asks for an AUR package. Privileges are per command too: a path inside the user’s home is written as the user, a system path through sudo tee.",
+          ],
+        },
+        { type: "code", file: "functions/linux.py", language: "python", code: linux },
+        {
+          type: "prose",
           paragraphs: [
             "It runs inside arch-chroot or on a booted system, as a user with sudo rather than as root, and has been my first command after every Arch installation since 2022.",
           ],
+        },
+        {
+          type: "media",
+          src: "/media/archibald-fastfetch.webp",
+          srcDark: "/media/archibald-fastfetch-dark.webp",
+          alt: "fastfetch in GNOME Console, next to the Arch Linux logo: Arch Linux with the zen kernel, GNOME 51 on Wayland, an AMD Ryzen 7 5800X3D and an NVIDIA GeForce RTX 3080 Ti.",
+          caption: "My workstation, twelve minutes after boot. I use Arch, btw.",
+          frame: "bare",
         },
       ],
     },
@@ -133,9 +193,27 @@ export default defineProject({
         { type: "code", title: "I driver, dall’hardware che trova", file: "functions/setup.py", language: "python", code: pci },
         {
           type: "prose",
+          title: "Comandi che si leggono come comandi",
+          paragraphs: [
+            "Tutto ciò che Archibald fa al sistema passa per un solo modulo, linux.py. Ogni eseguibile è una classe con il suo nome, e ogni metodo prende il nome dei suoi flag: pacman.S, pacman.Qs, usermod.aG, makepkg.sir. Il modulo viola PEP 8 di proposito, perché leggere la configurazione somigli alla sessione di shell che sostituisce.",
+            "Gli argomenti viaggiano come liste, dritti all’eseguibile, così il nome di un pacchetto o di un gruppo non può diventare un comando; solo i comandi personalizzati scritti in un profilo passano per bash. Ogni wrapper scrive il proprio output in un log tutto suo, pacman.log, systemctl.log, paru.log, e restituisce vero o falso invece di sollevare eccezioni: è la configurazione a decidere cosa è fatale, e il terminale resta leggibile.",
+            "Gli strumenti arrivano quando servono per la prima volta. lspci installa pciutils, la clonazione installa git, Flatpak installa sé stesso, e paru viene compilato dall’AUR con makepkg la prima volta che un profilo chiede un pacchetto AUR. Anche i privilegi sono per comando: un percorso nella home dell’utente viene scritto come utente, un percorso di sistema con sudo tee.",
+          ],
+        },
+        { type: "code", file: "functions/linux.py", language: "python", code: linux },
+        {
+          type: "prose",
           paragraphs: [
             "Funziona dentro arch-chroot o su un sistema avviato, come utente con sudo e non come root, ed è il primo comando che lancio dopo ogni installazione di Arch dal 2022.",
           ],
+        },
+        {
+          type: "media",
+          src: "/media/archibald-fastfetch.webp",
+          srcDark: "/media/archibald-fastfetch-dark.webp",
+          alt: "fastfetch in GNOME Console, accanto al logo di Arch Linux: Arch Linux con il kernel zen, GNOME 51 su Wayland, un AMD Ryzen 7 5800X3D e una NVIDIA GeForce RTX 3080 Ti.",
+          caption: "La mia workstation, dodici minuti dopo l’avvio. I use Arch, btw.",
+          frame: "bare",
         },
       ],
     },
