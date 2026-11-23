@@ -44,7 +44,7 @@
   --gutter: clamp(1.25rem, 4vw, 2.5rem);
   --radius-slab: 16px;
   --radius-media: 22px;
-  --radius-window: 20px;
+  --radius-window: clamp(8px, 2.5vw, 18px);
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
