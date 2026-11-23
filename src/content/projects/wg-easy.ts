@@ -1,12 +1,32 @@
 import { defineProject } from "../types";
 
-const run = `❯ podman run -d --name=wg-easy \\
-    -e WG_HOST=vpn.example.org \\
-    -e PASSWORD_HASH='<bcrypt hash>' \\
-    -v ~/.wg-easy:/opt/wg \\
-    -p 3000:3000/tcp \\
-    --userns keep-id \\
-    ghcr.io/iomega8561/wg-easy:latest`;
+const quadlet = `[Container]
+Image=ghcr.io/iomega8561/wg-easy:config
+PublishPort=127.0.0.1:3000:3000
+UserNS=keep-id:uid=1000,gid=1000
+# Lowercase z: the host's WireGuard has to read wg0.conf too.
+Volume=%h/.wg-easy:/opt/wg:z
+
+Environment=PASSWORD_HASH_FILE=/run/secrets/wg-easy-password-hash
+Secret=wg-easy-password-hash,type=mount,target=/run/secrets/wg-easy-password-hash,uid=1000,mode=0400
+
+# Immutable root filesystem, no capabilities, no privilege escalation.
+ReadOnly=true
+DropCapability=ALL
+NoNewPrivileges=true
+
+HealthCmd=["/nodejs/bin/node", "/opt/wg-easy/dist/lib/healthcheck.js"]`;
+
+const keys = `export function generateKeyPair(): { privateKey: string, publicKey: string } {
+  const key = randomBytes(32);
+
+  // Clamped exactly as \`wg genkey\` does.
+  key.writeUInt8(key.readUInt8(0) & 248, 0);
+  key.writeUInt8((key.readUInt8(31) & 127) | 64, 31);
+
+  const privateKey = key.toString('base64');
+  return { privateKey, publicKey: derivePublicKey(privateKey) };
+}`;
 
 const nft = `export function generateDefaultNft(net: string, port: number, dev: string) {
   const postUp = [
@@ -67,7 +87,7 @@ export default defineProject({
   order: 25,
   layers: ["system", "container", "application", "interface"],
   years: "2026",
-  stack: ["WireGuard", "TypeScript", "React", "nftables", "Podman", "Tailwind CSS"],
+  stack: ["WireGuard", "TypeScript", "React", "nftables", "Podman", "Quadlet", "Tailwind CSS"],
   repo: "iOmega8561/WG-Easy",
   links: [{ kind: "source", url: "https://github.com/iOmega8561/WG-Easy" }],
   accent: { light: "#88171a", dark: "#ff8f80" },
@@ -76,7 +96,7 @@ export default defineProject({
     en: {
       tagline: "WireGuard configuration, without root.",
       summary:
-        "A fork of wg-easy v14, rewritten in React and TypeScript. It manages peers, keys and QR codes from a web page, and leaves the tunnel to the host when the container isn’t allowed to touch the kernel.",
+        "A fork of wg-easy v14, rewritten in React and TypeScript and shipped as two rootless images. It manages peers, keys and QR codes from a web page, and leaves the tunnel to the host when the container isn’t allowed to touch the kernel.",
       blocks: [
         {
           type: "media",
@@ -93,11 +113,12 @@ export default defineProject({
         },
         {
           type: "table",
-          title: "Two ways to run it",
-          columns: ["", "Configuration only", "Managed"],
+          title: "Two images, one for each way to run it",
+          columns: ["", ":config", ":managed"],
           rows: [
-            ["Turned on by", "The default", "Setting WG_MANAGED"],
-            ["Capabilities", "None", "NET_ADMIN, NET_RAW, SYS_MODULE"],
+            ["Inside", "Node and the app, distroless", "The same on Alpine, with wg-quick, wireguard-go and nftables"],
+            ["Runs as", "An unprivileged user", "Root of its rootless user namespace"],
+            ["Capabilities", "None", "NET_ADMIN"],
             ["Brings up wg0", "The host: wg-quick, systemd-networkd", "The container, with wg-quick"],
             ["Firewall and NAT", "Yours", "Generated nftables tables"],
             ["Live traffic", "—", "Per-client rates and last handshake"],
@@ -105,20 +126,40 @@ export default defineProject({
           ],
         },
         {
+          type: "prose",
+          title: "No sudo, no shell, a read-only root",
+          paragraphs: [
+            "Both images start node directly and write only to their data directory, so they run on a read-only root filesystem. The server is bundled with every dependency it uses: an image holds the built app and a Node runtime, with no node_modules and no npm. The configuration-only image is distroless on top of that: no shell, no WireGuard tools, nothing to escalate with.",
+            "The managed image needs wg-quick, which only runs as root and otherwise re-executes itself through sudo. Instead of keeping sudo, it runs as root of its own user namespace: under rootless Podman, the user who started it, holding NET_ADMIN and nothing else. The user namespace was already the real wall, and still is; what changes is that no setuid binary is left, so no-new-privileges holds, and the image that needs nothing carries nothing.",
+            "The image also decides the mode. The managed one sets WG_MANAGED itself, the setting accepts only clear yes or no values, and a server asked to manage an interface without the tools to do it stops at startup and says why.",
+          ],
+        },
+        {
           type: "code",
-          file: "zsh",
-          language: "console",
-          caption: "Configuration only: no capabilities, no UDP port, and files owned by the user who runs it.",
-          code: run,
+          title: "Shipped with its Quadlet units",
+          file: "deploy/wg-easy-config.container",
+          language: "ini",
+          caption:
+            "The password’s bcrypt hash arrives as a Podman secret, read through PASSWORD_HASH_FILE, rather than as an environment variable that podman inspect would show. The health check runs with node alone, since there is no shell to run anything else.",
+          code: quadlet,
         },
         {
           type: "prose",
           title: "One JSON file, one generated config",
           paragraphs: [
             "The whole state is a single wg0.json: the server’s keys and subnet, and every client with its address and keys. Each change rewrites wg0.conf from it, readable only by its owner, with one [Peer] section for every enabled client. Disabling a client takes it out of the file; deleting it takes it out of both.",
-            "When WireGuard is managed, the new file is applied with wg syncconf on the output of wg-quick strip: only the peers that changed are touched, and everyone else stays connected. Keys come from wg genkey, wg pubkey and wg genpsk, and a private key never reaches the log: the command is printed with the key masked.",
+            "When WireGuard is managed, the new file is applied with wg syncconf on the output of wg-quick strip: only the peers that changed are touched, and everyone else stays connected. Every command runs with its arguments as a list, never through a shell.",
             "Addresses are handed out as integers. The subnet is parsed into 32-bit network and broadcast addresses, and a new client gets the first one in between that isn’t the server’s or already taken. An address edited by hand goes through the same checks, and the error says which one failed.",
           ],
+        },
+        {
+          type: "code",
+          title: "Keys that never touch a command line",
+          file: "lib/service/Utility.ts",
+          language: "ts",
+          caption:
+            "Key pairs and preshared keys are generated by Node itself, so a private key is never an argument visible to ps, nor a line in a log. The public key is derived from the private one with Node’s own X25519.",
+          code: keys,
         },
         {
           type: "code",
@@ -152,7 +193,7 @@ export default defineProject({
             },
             {
               title: "Built on every push",
-              body: "A GitHub Actions workflow builds the image with Podman, squashed into one layer, and publishes it on the GitHub Container Registry tagged with its commit.",
+              body: "A GitHub Actions workflow builds both images with Podman, each from its own Containerfile, and publishes them on the GitHub Container Registry.",
             },
           ],
         },
@@ -165,7 +206,7 @@ export default defineProject({
     it: {
       tagline: "La configurazione di WireGuard, senza root.",
       summary:
-        "Un fork di wg-easy v14, riscritto in React e TypeScript. Gestisce peer, chiavi e codici QR da una pagina web, e lascia il tunnel all’host quando il container non ha il permesso di toccare il kernel.",
+        "Un fork di wg-easy v14, riscritto in React e TypeScript e distribuito come due immagini rootless. Gestisce peer, chiavi e codici QR da una pagina web, e lascia il tunnel all’host quando il container non ha il permesso di toccare il kernel.",
       blocks: [
         {
           type: "media",
@@ -182,11 +223,12 @@ export default defineProject({
         },
         {
           type: "table",
-          title: "Due modi di usarlo",
-          columns: ["", "Solo configurazione", "Gestito"],
+          title: "Due immagini, una per ogni modo di usarlo",
+          columns: ["", ":config", ":managed"],
           rows: [
-            ["Si attiva", "Di default", "Impostando WG_MANAGED"],
-            ["Capability", "Nessuna", "NET_ADMIN, NET_RAW, SYS_MODULE"],
+            ["Contiene", "Node e l’app, distroless", "Lo stesso su Alpine, con wg-quick, wireguard-go e nftables"],
+            ["Gira come", "Un utente senza privilegi", "Root del suo user namespace rootless"],
+            ["Capability", "Nessuna", "NET_ADMIN"],
             ["Chi attiva wg0", "L’host: wg-quick, systemd-networkd", "Il container, con wg-quick"],
             ["Firewall e NAT", "A carico tuo", "Tabelle nftables generate"],
             ["Traffico in tempo reale", "—", "Velocità per client e ultimo handshake"],
@@ -194,20 +236,40 @@ export default defineProject({
           ],
         },
         {
+          type: "prose",
+          title: "Niente sudo, niente shell, sola lettura",
+          paragraphs: [
+            "Entrambe le immagini avviano direttamente node e scrivono solo nella loro cartella dati, così girano con il filesystem di sistema in sola lettura. Il server è impacchettato con tutte le dipendenze che usa: un’immagine contiene l’app compilata e un runtime Node, senza node_modules e senza npm. L’immagine di sola configurazione è in più distroless: niente shell, niente strumenti WireGuard, niente con cui ottenere privilegi.",
+            "L’immagine gestita ha bisogno di wg-quick, che gira solo come root e altrimenti si rilancia da sé con sudo. Invece di tenere sudo, gira come root del proprio user namespace: con Podman rootless, l’utente che l’ha avviata, con NET_ADMIN e nient’altro. Il vero muro era già lo user namespace, e lo resta; quello che cambia è che non resta alcun binario setuid, così no-new-privileges tiene, e l’immagine che non ha bisogno di niente non si porta dietro niente.",
+            "È anche l’immagine a decidere la modalità. Quella gestita imposta da sé WG_MANAGED, l’impostazione accetta solo valori chiaramente sì o no, e un server a cui si chiede di gestire un’interfaccia senza gli strumenti per farlo si ferma all’avvio e dice perché.",
+          ],
+        },
+        {
           type: "code",
-          file: "zsh",
-          language: "console",
-          caption: "Solo configurazione: nessuna capability, nessuna porta UDP, e file di proprietà dell’utente che lo avvia.",
-          code: run,
+          title: "Distribuito con le sue unità Quadlet",
+          file: "deploy/wg-easy-config.container",
+          language: "ini",
+          caption:
+            "L’hash bcrypt della password arriva come secret di Podman, letto tramite PASSWORD_HASH_FILE, invece che come variabile d’ambiente che podman inspect mostrerebbe. Il controllo di salute gira con il solo node, perché non c’è una shell con cui eseguire altro.",
+          code: quadlet,
         },
         {
           type: "prose",
           title: "Un file JSON, una configurazione generata",
           paragraphs: [
             "Tutto lo stato è un unico wg0.json: le chiavi e la sottorete del server, e ogni client con il suo indirizzo e le sue chiavi. Ogni modifica riscrive da lì wg0.conf, leggibile solo dal proprietario, con una sezione [Peer] per ogni client attivo. Disattivare un client lo toglie dal file; eliminarlo lo toglie da entrambi.",
-            "Quando WireGuard è gestito, il nuovo file viene applicato con wg syncconf sull’output di wg-quick strip: si toccano solo i peer cambiati, e tutti gli altri restano connessi. Le chiavi vengono da wg genkey, wg pubkey e wg genpsk, e una chiave privata non finisce mai nel log: il comando viene stampato con la chiave mascherata.",
+            "Quando WireGuard è gestito, il nuovo file viene applicato con wg syncconf sull’output di wg-quick strip: si toccano solo i peer cambiati, e tutti gli altri restano connessi. Ogni comando riceve gli argomenti come lista, mai attraverso una shell.",
             "Gli indirizzi vengono assegnati come numeri interi. La sottorete viene scomposta negli indirizzi di rete e di broadcast a 32 bit, e un nuovo client riceve il primo libero tra i due che non sia quello del server. Un indirizzo modificato a mano passa per gli stessi controlli, e l’errore dice quale non ha superato.",
           ],
+        },
+        {
+          type: "code",
+          title: "Chiavi che non toccano mai una riga di comando",
+          file: "lib/service/Utility.ts",
+          language: "ts",
+          caption:
+            "Le coppie di chiavi e le chiavi condivise sono generate da Node stesso, così una chiave privata non è mai un argomento visibile a ps, né una riga in un log. La chiave pubblica si ricava da quella privata con l’X25519 di Node.",
+          code: keys,
         },
         {
           type: "code",
@@ -241,7 +303,7 @@ export default defineProject({
             },
             {
               title: "Compilato a ogni push",
-              body: "Un workflow di GitHub Actions costruisce l’immagine con Podman, compressa in un solo layer, e la pubblica sul GitHub Container Registry con il tag del suo commit.",
+              body: "Un workflow di GitHub Actions costruisce entrambe le immagini con Podman, ciascuna dal proprio Containerfile, e le pubblica sul GitHub Container Registry.",
             },
           ],
         },
