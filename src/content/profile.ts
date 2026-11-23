@@ -22,7 +22,7 @@ export const profile: Localized<ProfileCopy> = {
       application: { name: "Application", tech: ["Swift", "Spring", "TypeScript", "C++"] },
       container: { name: "Container", tech: ["Rootless Podman", "Quadlet", "Containerfile"] },
       virtualization: { name: "Virtualization", tech: ["Virtualization.framework", "QEMU", "KVM", "Proxmox"] },
-      system: { name: "System", tech: ["Linux", "systemd", "Arch Linux", "OpenZFS"] },
+      system: { name: "System", tech: ["Linux", "systemd", "Arch Linux", "WireGuard", "OpenZFS"] },
     },
     featured: {
       headline: "Windows with Secure Boot, in an app built for the Mac App Store.",
@@ -91,7 +91,7 @@ export const profile: Localized<ProfileCopy> = {
       application: { name: "Applicazione", tech: ["Swift", "Spring", "TypeScript", "C++"] },
       container: { name: "Container", tech: ["Podman rootless", "Quadlet", "Containerfile"] },
       virtualization: { name: "Virtualizzazione", tech: ["Virtualization.framework", "QEMU", "KVM", "Proxmox"] },
-      system: { name: "Sistema", tech: ["Linux", "systemd", "Arch Linux", "OpenZFS"] },
+      system: { name: "Sistema", tech: ["Linux", "systemd", "Arch Linux", "WireGuard", "OpenZFS"] },
     },
     featured: {
       headline: "Windows con Secure Boot, in un’app pensata per il Mac App Store.",
