@@ -316,7 +316,7 @@
   margin-inline: auto;
 }
 .b-media--window img {
-  border-radius: var(--radius-media);
+  border-radius: var(--radius-window);
   border: 1px solid var(--line);
 }
 .b-media .b-caption {
@@ -500,7 +500,7 @@
 }
 .b-media--window video,
 .b-media--window img {
-  border-radius: 12px;
+  border-radius: var(--radius-window);
   box-shadow:
     0 0 0 1px color-mix(in srgb, var(--ink) 12%, transparent),
     0 24px 60px -20px rgba(0, 0, 0, 0.35);
