@@ -50,6 +50,25 @@ export function zipSize(entries: readonly ZipEntryInput[]): number {
   return total;
 }`;
 
+const ejs = `function configure(play: PlayConfig, detail: GameDetail): void {
+  window.EJS_player = '#game';
+  window.EJS_core = play.core;
+  window.EJS_gameUrl = play.gameUrl;
+  if (play.biosUrl) window.EJS_biosUrl = play.biosUrl;
+  window.EJS_pathtodata = play.dataPath;
+  window.EJS_threads = play.threads;
+  // EmulatorJS' own menus follow the same language as the rest of Retroshelf.
+  window.EJS_language = EJS_LANGUAGE[locale];
+  // …
+  // Netplay needs a third-party server, which Retroshelf deliberately doesn't use.
+  window.EJS_Buttons = { netplay: false };
+
+  // Route EmulatorJS' own Save/Load buttons and hotkeys into slot-based IndexedDB storage.
+  window.EJS_onSaveState = (event) => void saveToSlot(currentSlot(), event.state);
+  window.EJS_onLoadState = () => void loadFromSlot(currentSlot());
+  // …
+}`;
+
 export default defineProject({
   slug: "retroshelf",
   name: "Retroshelf",
@@ -135,6 +154,31 @@ export default defineProject({
             { title: "Tested where it matters", body: "Traversal attempts over raw HTTP, byte-range semantics, gamelist parsing, disc grouping and ZIP validity." },
           ],
         },
+        {
+          type: "prose",
+          title: "Then EmulatorJS takes over",
+          paragraphs: [
+            "EmulatorJS runs libretro cores compiled to WebAssembly, and it is configured through a handful of globals set before its loader script. Retroshelf sets them per game: the core for the system, the URL of the game (for a disc game, one of those ZIP archives), the BIOS when one is needed, and the reader’s language, so the emulator’s menus and touch controls match the library.",
+            "Some cores, like PPSSPP for the PSP and DOSBox Pure, are only built with threads, and threads in a browser need SharedArrayBuffer, which only a cross-origin isolated page gets. Every response carries the two headers that isolate it, and before loading anything the player checks for isolation, and for WebGL 2 on the PSP. A missing requirement becomes a sentence that explains it, not a black screen.",
+            "Saves never leave the browser, but they don’t rely on EmulatorJS alone either. Its Save and Load buttons write to nine slots in Retroshelf’s own IndexedDB, each with a screenshot; battery saves are mirrored there and put back if the emulator’s cache is cleared; and leaving the page waits, briefly, for the last write to land.",
+          ],
+        },
+        {
+          type: "code",
+          file: "web/src/play/main.ts",
+          language: "ts",
+          caption:
+            "Next to it lives one workaround: EmulatorJS 4.2 ignores a controller that was already in use before the game started, so Retroshelf hands it to the first free player, exactly as EmulatorJS would.",
+          code: ejs,
+        },
+        {
+          type: "media",
+          src: "/media/retroshelf-play.webp",
+          srcDark: "/media/retroshelf-play-dark.webp",
+          alt: "Crash Bandicoot running in a desktop browser, next to an iPhone playing Mario Kart DS with on-screen buttons.",
+          caption: "The PlayStation on the desktop, the Nintendo DS on a phone. The touch controls speak Italian, like the rest of my library.",
+          frame: "bare",
+        },
       ],
     },
     it: {
@@ -209,6 +253,31 @@ export default defineProject({
             { title: "Intestazioni rigorose", body: "Una Content Security Policy limitata alla stessa origine; la pagina del player aggiunge solo ciò che serve all’emulatore, WebAssembly e script blob. I permessi sono ristretti a gamepad e schermo intero." },
             { title: "Test dove servono", body: "Tentativi di attraversamento dei percorsi via HTTP grezzo, semantica delle richieste a intervalli, lettura dei gamelist, raggruppamento dei dischi e validità degli ZIP." },
           ],
+        },
+        {
+          type: "prose",
+          title: "Poi tocca a EmulatorJS",
+          paragraphs: [
+            "EmulatorJS fa girare core libretro compilati in WebAssembly, e si configura con una manciata di variabili globali impostate prima del suo script di caricamento. Retroshelf le imposta per ogni gioco: il core del sistema, l’URL del gioco (per un gioco su disco, uno di quegli archivi ZIP), il BIOS quando serve, e la lingua di chi legge, così i menu e i comandi touch dell’emulatore parlano come la libreria.",
+            "Alcuni core, come PPSSPP per la PSP e DOSBox Pure, esistono solo con i thread, e i thread in un browser richiedono SharedArrayBuffer, che spetta solo a una pagina isolata tra origini diverse. Ogni risposta porta le due intestazioni che la isolano, e prima di caricare qualsiasi cosa il player verifica l’isolamento, e WebGL 2 per la PSP. Un requisito mancante diventa una frase che lo spiega, non uno schermo nero.",
+            "I salvataggi non lasciano mai il browser, ma non dipendono nemmeno solo da EmulatorJS. I suoi pulsanti Salva e Carica scrivono in nove slot nell’IndexedDB di Retroshelf, ognuno con uno screenshot; i salvataggi della cartuccia vengono copiati lì e rimessi al loro posto se la cache dell’emulatore viene svuotata; e lasciare la pagina attende, per poco, che l’ultima scrittura vada a buon fine.",
+          ],
+        },
+        {
+          type: "code",
+          file: "web/src/play/main.ts",
+          language: "ts",
+          caption:
+            "Accanto vive un rimedio: EmulatorJS 4.2 ignora un controller già in uso prima dell’avvio del gioco, così Retroshelf lo assegna al primo giocatore libero, esattamente come farebbe EmulatorJS.",
+          code: ejs,
+        },
+        {
+          type: "media",
+          src: "/media/retroshelf-play.webp",
+          srcDark: "/media/retroshelf-play-dark.webp",
+          alt: "Crash Bandicoot in un browser desktop, accanto a un iPhone che gioca a Mario Kart DS con i pulsanti sullo schermo.",
+          caption: "La PlayStation sul desktop, il Nintendo DS su un telefono. I comandi touch parlano italiano, come il resto della mia libreria.",
+          frame: "bare",
         },
       ],
     },
