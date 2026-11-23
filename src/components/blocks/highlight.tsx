@@ -63,7 +63,8 @@ const rules: Record<string, Rule[]> = {
   ],
   ini: [
     { kind: "comment", pattern: /#[^\n]*/y },
-    { kind: "section", pattern: /\[[^\]\n]+\]/y },
+    // Only at the start of a line: brackets in a value (HealthCmd=["…"]) are not a section.
+    { kind: "section", pattern: /^\[[^\]\n]+\]/my },
     { kind: "attribute", pattern: /^[A-Za-z]+(?==)/my },
   ],
   /** A terminal session: the prompt and what was typed after it stand out. */
