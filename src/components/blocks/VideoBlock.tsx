@@ -1,20 +1,8 @@
-import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Picture } from "./Picture";
+import { useColorScheme } from "../../lib/colorScheme";
 
 type Props = { src: string; poster: string; srcDark?: string; posterDark?: string; alt: string; className?: string };
-
-const darkQuery = "(prefers-color-scheme: dark)";
-
-function subscribe(onChange: () => void) {
-  const query = window.matchMedia(darkQuery);
-  query.addEventListener("change", onChange);
-  return () => query.removeEventListener("change", onChange);
-}
-
-/** Follows the reader's light or dark setting, live. */
-function usePrefersDark(): boolean {
-  return useSyncExternalStore(subscribe, () => window.matchMedia(darkQuery).matches, () => false);
-}
 
 /**
  * A silent demo: it plays while at least half of it is on screen and pauses otherwise.
@@ -24,7 +12,7 @@ function usePrefersDark(): boolean {
  */
 export function Video({ src, poster, srcDark, posterDark, alt, className }: Props) {
   const ref = useRef<HTMLVideoElement>(null);
-  const dark = usePrefersDark();
+  const { dark } = useColorScheme();
   const [failed, setFailed] = useState(false);
 
   const source = dark && srcDark ? srcDark : src;
