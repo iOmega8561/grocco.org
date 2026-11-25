@@ -812,6 +812,8 @@
   background: none;
   cursor: pointer;
   color: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
 }
 .site-footer__switch:hover {
   color: var(--ink);
