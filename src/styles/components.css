@@ -255,8 +255,8 @@
 /* ---------- Featured project ---------- */
 
 .featured {
-  background: #000;
-  color: #f5f5f7;
+  background: var(--featured-bg);
+  color: var(--featured-ink);
   color-scheme: dark;
   overflow: hidden;
 }
@@ -291,7 +291,7 @@
 .featured__body {
   margin-top: 1.5rem;
   max-width: 40rem;
-  color: #a1a1a6;
+  color: var(--featured-ink-2);
   font-size: var(--step-1);
   line-height: 1.42;
   text-wrap: pretty;
@@ -556,11 +556,11 @@
   background: var(--ink-3);
 }
 .live__dot[data-state="ok"] {
-  background: #28c840;
-  box-shadow: 0 0 0 3px color-mix(in srgb, #28c840 22%, transparent);
+  background: var(--status-ok);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--status-ok) 22%, transparent);
 }
 .live__dot[data-state="warn"] {
-  background: #ff9f0a;
+  background: var(--status-warn);
 }
 
 /* Containers grouped by network: one rounded group each, a container repeated in every network it joins. */
@@ -779,3 +779,4 @@
 .not-found .button {
   margin-top: 2rem;
 }
+

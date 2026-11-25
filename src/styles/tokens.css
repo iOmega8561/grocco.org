@@ -15,6 +15,14 @@
   --link: #0066cc;
   --focus: #0071e3;
 
+  /* The featured panel stays black in both schemes; a theme can repaint it. */
+  --featured-bg: #000000;
+  --featured-ink: #f5f5f7;
+  --featured-ink-2: #a1a1a6;
+  /* The dots of the live panel. */
+  --status-ok: #28c840;
+  --status-warn: #ff9f0a;
+
   /* The five slabs of the stack, from the bottom up. */
   --slab-system: #1d1d1f;
   --slab-system-ink: #f5f5f7;
