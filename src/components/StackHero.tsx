@@ -4,6 +4,7 @@ import { pick } from "../i18n/languages";
 import { profile } from "../content/profile";
 import { projects } from "../content/registry";
 import { layerIds, type LayerId } from "../content/types";
+import { ThemeSlot } from "../themes/context";
 
 type Props = {
   selected: LayerId | null;
@@ -55,6 +56,7 @@ export function StackHero({ selected, onSelect }: Props) {
             </button>
           );
         })}
+        <ThemeSlot name="hero.stack" />
       </div>
       <p id="stack-hint" className="stack__hint">
         {t.stack.hint}

@@ -5,6 +5,7 @@ import { defaultLanguage, isLang } from "../i18n/languages";
 import { Header } from "../components/Header";
 import { Footer } from "../components/Footer";
 import { messages } from "../i18n/messages";
+import { ThemeOverlay } from "../themes/context";
 
 /** Every page lives under a language prefix: /it/…, /en/… */
 export function Layout() {
@@ -29,6 +30,7 @@ export function Layout() {
         <Outlet />
       </main>
       <Footer />
+      <ThemeOverlay />
     </I18nProvider>
   );
 }

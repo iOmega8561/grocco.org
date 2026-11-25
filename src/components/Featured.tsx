@@ -5,6 +5,7 @@ import { profile } from "../content/profile";
 import { featuredProject } from "../content/registry";
 import { paths } from "../lib/paths";
 import { accentStyle } from "../lib/accent";
+import { ThemeSlot } from "../themes/context";
 
 /** The one project that gets a stage of its own on the home page. */
 export function Featured() {
@@ -26,6 +27,7 @@ export function Featured() {
         </Link>
         {project.cover && <img className="featured__media" src={project.cover} alt="" loading="lazy" width={1800} height={1170} />}
       </div>
+      <ThemeSlot name="featured" />
     </section>
   );
 }

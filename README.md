@@ -68,6 +68,34 @@ English and Italian today. To add one:
 Projects, profile and résumé can be translated independently: a missing language falls back to English.
 Routes are `/<lang>/…`; `/` sends visitors to the language their browser prefers.
 
+## Seasonal themes
+
+For a week around an occasion, the site can wear a theme. Every folder in `src/themes/` with a `theme.ts` is
+one, discovered automatically. Only the definitions are bundled up front: a theme's code and CSS are a separate
+chunk, loaded before the first render only while the theme is on, so on every other day they cost nothing.
+
+- **Add:** create `src/themes/<id>/theme.ts`, default-exporting `defineTheme({ … })` (see `src/themes/types.ts`),
+  and an `index.tsx` that imports the theme's CSS and exports what it adds.
+- **Remove:** delete the folder.
+- **Preview:** `?skin=<id>` shows a theme on any day, `?skin=none` shows the site without themes, `?skin=auto`
+  goes back to the calendar. The preview lasts for the browser tab.
+
+A theme can do any of these, all optional:
+
+| Part | What it is |
+|---|---|
+| `when` | `{ from: "10-25", to: "10-31" }`, repeated every year (a window may wrap over the new year), or a function of the date for occasions that move |
+| `scheme` | Forces light or dark while the theme is on; images and videos with a dark variant follow it |
+| CSS | Scoped to `:root[data-skin="<id>"]`: redefine the tokens of `src/styles/tokens.css`, restyle components by class |
+| `slots` | Components placed in the named slots of the pages (`hero.stack`, `featured`, `timeline`, `project.hero`, `footer`, `notFound`) |
+| `overlay` | One component over the whole viewport, for weather, fog and the like |
+
+A slot covers its host element and lets clicks through, so decorations position themselves inside it and never
+move the content. They are hidden from assistive technology and from print, and should stay still when the
+reader asks for reduced motion (`useReducedMotion` in `src/themes/hooks.ts`). Content, links and wording are never
+replaced by a theme. While a theme is on, the footer offers to turn it off; the choice is remembered until the
+next year's window.
+
 ## Personal details
 
 Everything specific to one person lives in three places:

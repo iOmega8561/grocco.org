@@ -1,8 +1,11 @@
 import { useI18n } from "../i18n/context";
 import { site } from "../config/site";
+import { ThemeSlot, useTheme } from "../themes/context";
+import { pick } from "../i18n/languages";
 
 export function Footer() {
-  const { t } = useI18n();
+  const { lang, t } = useI18n();
+  const { scheduled, active, setOn } = useTheme();
   const year = new Date().getFullYear();
 
   return (
@@ -31,9 +34,17 @@ export function Footer() {
               <a href={site.sourceRepo}>{t.footer.source}</a>
             </li>
           )}
+          {scheduled && (
+            <li>
+              <button type="button" className="site-footer__switch" onClick={() => setOn(!active)}>
+                {active ? t.theme.off(pick(scheduled.name, lang)) : t.theme.on(pick(scheduled.name, lang))}
+              </button>
+            </li>
+          )}
         </ul>
         <p className="site-footer__copy">© {year} {site.name}</p>
       </div>
+      <ThemeSlot name="footer" />
     </footer>
   );
 }

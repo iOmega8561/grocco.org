@@ -5,6 +5,7 @@ import { profile } from "../content/profile";
 import { projectBySlug } from "../content/registry";
 import { paths } from "../lib/paths";
 import { accentStyle } from "../lib/accent";
+import { ThemeSlot } from "../themes/context";
 
 /** A real sequence, so it is numbered: each step led to the next. */
 export function Timeline() {
@@ -12,7 +13,7 @@ export function Timeline() {
   const copy = pick(profile, lang).timeline;
 
   return (
-    <section className="section page" aria-labelledby="timeline-title">
+    <section className="section page timeline-section" aria-labelledby="timeline-title">
       <h2 id="timeline-title" className="section-title">
         {copy.title}
       </h2>
@@ -34,6 +35,7 @@ export function Timeline() {
           );
         })}
       </ol>
+      <ThemeSlot name="timeline" />
     </section>
   );
 }

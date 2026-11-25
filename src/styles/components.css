@@ -255,6 +255,7 @@
 /* ---------- Featured project ---------- */
 
 .featured {
+  position: relative;
   background: var(--featured-bg);
   color: var(--featured-ink);
   color-scheme: dark;
@@ -780,3 +781,46 @@
   margin-top: 2rem;
 }
 
+/* ---------- Themes ---------- */
+
+/* A slot covers its host and lets clicks through; see src/themes/types.ts. */
+.stack,
+.timeline-section,
+.project-hero,
+.site-footer,
+.not-found {
+  position: relative;
+}
+
+.theme-slot {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.theme-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.site-footer__switch {
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  color: inherit;
+}
+.site-footer__switch:hover {
+  color: var(--ink);
+}
+
+@media print {
+  .theme-slot,
+  .theme-overlay,
+  .site-footer__switch {
+    display: none;
+  }
+}

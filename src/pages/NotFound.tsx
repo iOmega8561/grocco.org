@@ -1,6 +1,7 @@
 import { Link } from "react-router";
 import { useI18n } from "../i18n/context";
 import { paths } from "../lib/paths";
+import { ThemeSlot } from "../themes/context";
 
 export function NotFound() {
   const { lang, t } = useI18n();
@@ -11,6 +12,7 @@ export function NotFound() {
       <Link className="button button--primary" to={paths.home(lang)}>
         {t.notFound.home}
       </Link>
+      <ThemeSlot name="notFound" />
     </section>
   );
 }

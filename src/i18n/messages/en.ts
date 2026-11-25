@@ -57,6 +57,7 @@ export const en = {
     evidence: "Skills, with the proof",
     evidenceIntro: "Each skill links to the projects where you can check it in the code.",
   },
+  theme: { off: (name: string) => `Turn off ${name}`, on: (name: string) => `Turn ${name} back on` },
   footer: { source: "This site is open source", contact: "Write to me", madeWith: "React, TypeScript and a lot of attention to detail." },
   notFound: { title: "This page does not exist.", body: "The address may be mistyped, or the page may have moved.", home: "Go to the home page" },
 };

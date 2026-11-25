@@ -10,6 +10,7 @@ import { paths } from "../lib/paths";
 import { relativeTime, repoStats } from "../lib/github";
 import { useDocumentMeta } from "../lib/useDocumentMeta";
 import { NotFound } from "./NotFound";
+import { ThemeSlot } from "../themes/context";
 
 /** Stars are shown from this count up: below it they say little. */
 const starThreshold = 5;
@@ -74,6 +75,7 @@ function ProjectView({ slug }: { slug: string }) {
             </div>
           )}
         </dl>
+        <ThemeSlot name="project.hero" />
       </header>
 
       <Blocks blocks={copy.blocks} />

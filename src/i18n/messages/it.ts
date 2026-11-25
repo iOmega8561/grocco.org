@@ -58,6 +58,7 @@ export const it: Messages = {
     evidence: "Competenze, con le prove",
     evidenceIntro: "Ogni competenza porta ai progetti dove puoi verificarla nel codice.",
   },
+  theme: { off: (name: string) => `Disattiva ${name}`, on: (name: string) => `Riattiva ${name}` },
   footer: { source: "Il codice di questo sito è pubblico", contact: "Scrivimi", madeWith: "React, TypeScript e molta cura per i dettagli." },
   notFound: { title: "Questa pagina non esiste.", body: "L’indirizzo potrebbe essere sbagliato, o la pagina potrebbe essere stata spostata.", home: "Torna alla home" },
 };
