@@ -74,6 +74,18 @@ export function ThemeSlot({ name }: { name: SlotName }) {
   );
 }
 
+/** The active theme's layer behind the whole site, if it has one. */
+export function ThemeBackdrop() {
+  const { module } = useTheme();
+  const Backdrop = module?.backdrop;
+  if (!Backdrop) return null;
+  return (
+    <div className="theme-backdrop" aria-hidden="true">
+      <Backdrop />
+    </div>
+  );
+}
+
 /** The active theme's layer over the whole viewport, if it has one. */
 export function ThemeOverlay() {
   const { module } = useTheme();

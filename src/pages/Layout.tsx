@@ -5,7 +5,7 @@ import { defaultLanguage, isLang } from "../i18n/languages";
 import { Header } from "../components/Header";
 import { Footer } from "../components/Footer";
 import { messages } from "../i18n/messages";
-import { ThemeOverlay } from "../themes/context";
+import { ThemeBackdrop, ThemeOverlay } from "../themes/context";
 
 /** Every page lives under a language prefix: /it/…, /en/… */
 export function Layout() {
@@ -22,6 +22,7 @@ export function Layout() {
 
   return (
     <I18nProvider lang={lang}>
+      <ThemeBackdrop />
       <a className="skip-link" href="#main">
         {messages[lang].nav.skip}
       </a>

@@ -798,6 +798,15 @@
   pointer-events: none;
 }
 
+/* Behind everything: the canvas still shows through, so the page's own background stays underneath. */
+.theme-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  overflow: hidden;
+}
+
 .theme-overlay {
   position: fixed;
   inset: 0;
@@ -821,6 +830,7 @@
 
 @media print {
   .theme-slot,
+  .theme-backdrop,
   .theme-overlay,
   .site-footer__switch {
     display: none;

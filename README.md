@@ -89,6 +89,7 @@ A theme can do any of these, all optional:
 | CSS | Scoped to `:root[data-skin="<id>"]`: redefine the tokens of `src/styles/tokens.css`, restyle components by class |
 | `slots` | Components placed in the named slots of the pages (`hero.stack`, `featured`, `timeline`, `project.hero`, `footer`, `notFound`) |
 | `overlay` | One component over the whole viewport, for weather, fog and the like |
+| `backdrop` | One component behind the whole site, for a sky or a starfield; sections with their own background cover it |
 
 A slot covers its host element and lets clicks through, so decorations position themselves inside it and never
 move the content. They are hidden from assistive technology and from print, and should stay still when the

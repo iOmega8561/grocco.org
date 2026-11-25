@@ -35,6 +35,8 @@ export type ThemeModule = {
   slots?: Partial<Record<SlotName, ComponentType<SlotProps>>>;
   /** Mounted once over the whole site, fixed to the viewport: weather, fog, flights of bats. */
   overlay?: ComponentType;
+  /** Mounted once behind the whole site, fixed to the viewport: a sky, a starfield. */
+  backdrop?: ComponentType;
 };
 
 /** "MM-DD", the month and day a window opens or closes, both included. */
