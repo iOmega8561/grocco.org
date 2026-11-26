@@ -43,7 +43,21 @@ export function themeForDate(date: Date): ThemeDefinition | undefined {
 /* ---------- The reader's choices ---------- */
 
 const previewKey = "skin-preview";
-const offKey = (theme: ThemeDefinition, date: Date) => `skin-off:${theme.id}:${date.getFullYear()}`;
+
+/**
+ * The year the current window opened in. A window that wraps over the new year (31 December to
+ * 1 January) opened the year before once January has come, so turning it off lasts the whole window.
+ */
+function windowYear(theme: ThemeDefinition, date: Date): number {
+  const year = date.getFullYear();
+  if (typeof theme.when === "function") return year;
+  const from = monthDay(theme.when.from);
+  const to = monthDay(theme.when.to);
+  const today = (date.getMonth() + 1) * 100 + date.getDate();
+  return from > to && today <= to ? year - 1 : year;
+}
+
+const offKey = (theme: ThemeDefinition, date: Date) => `skin-off:${theme.id}:${windowYear(theme, date)}`;
 
 function read(storage: () => Storage, key: string): string | null {
   try {
