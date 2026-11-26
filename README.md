@@ -73,6 +73,7 @@ Routes are `/<lang>/…`; `/` sends visitors to the language their browser prefe
 For a few days around an occasion, the site can wear a theme. Every folder in `src/themes/` with a `theme.ts` is
 one, discovered automatically. Only the definitions are bundled up front: a theme's code and CSS are a separate
 chunk, loaded before the first render only while the theme is on, so on every other day they cost nothing.
+If that chunk takes longer than 2.5 seconds, the site starts without the theme and the footer offers it.
 
 - **Add:** create `src/themes/<id>/theme.ts`, default-exporting `defineTheme({ … })` (see `src/themes/types.ts`),
   and an `index.tsx` that imports the theme's CSS and exports what it adds.
