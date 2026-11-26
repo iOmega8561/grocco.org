@@ -1,0 +1,545 @@
+/*
+ * Sysadmin Day. Always dark, like a server room with the lights off, in an industrial palette:
+ * charcoal and gunmetal, stencil white, safety amber, and green only where something is running.
+ * The stack becomes a rack: its slabs are rack units with screws on their ears and LEDs that light up
+ * as the stack builds, from the System slab up, and it stands between two rails, with a power button
+ * that power-cycles it. Behind the site, racks blink down the aisle; a hard drive spins beside the
+ * timeline and a fan turns on the footer line. The live panel’s dots beat like LEDs, and the missing
+ * page is an unplugged cable.
+ *
+ * Everything is scoped to [data-skin="sad"], so it stops applying the moment the theme is off.
+ */
+
+:root[data-skin="sad"] {
+  /*
+   * An industrial palette: charcoal and gunmetal, text the warm white of stencilled paint, safety amber
+   * for what can be followed or focused, and green kept for what is running.
+   */
+  --bg: #0e0f10;
+  --surface: #16181a;
+  --surface-2: #1d2023;
+  --ink: #ebe8e1;
+  --ink-2: #a9a59c;
+  --ink-3: #87837b;
+  --line: #2a2d30;
+  --link: #f2a516;
+  --focus: #f2a516;
+
+  /* Rack units: four gunmetal ones, and the System slab in brushed aluminium, the sysadmin’s layer. */
+  --slab-interface: #17191b;
+  --slab-interface-ink: #e6e3dc;
+  --slab-application: #1b1e20;
+  --slab-application-ink: #e6e3dc;
+  --slab-container: #202326;
+  --slab-container-ink: #e6e3dc;
+  --slab-virtualization: #25292c;
+  --slab-virtualization-ink: #e6e3dc;
+  --slab-system: #b6b9bd;
+  --slab-system-ink: #111213;
+
+  --featured-bg: #090a0a;
+  --status-ok: #36d06c;
+  --status-warn: #ffb000;
+
+  --sa-led: #36d06c;
+  --sa-led-glow: rgb(54 208 108 / 0.65);
+  --sa-led-off: #2c2f32;
+  --sa-amber: #ffb000;
+  --sa-screw: #3b3f43;
+  --sa-screw-slot: #0d0e0f;
+  --sa-rail: #26292c;
+  --sa-panel: #17191b;
+  --sa-metal: #2c3033;
+  --sa-cable: #e8b10f;
+}
+
+/* ---------- The stack, as a rack ---------- */
+
+:root[data-skin="sad"] .stack__slab {
+  /* A unit: a screw at each corner of its ears, a faint bevel along the top, the unit’s own colour. */
+  --sa-screw-head: radial-gradient(circle, var(--sa-screw-slot) 0 1px, var(--sa-screw) 1.4px 2.8px, transparent 3.2px);
+  position: relative;
+  border-color: rgb(255 255 255 / 0.04);
+  background:
+    var(--sa-screw-head) 7px 9px / 7px 7px no-repeat,
+    var(--sa-screw-head) 7px calc(100% - 9px) / 7px 7px no-repeat,
+    var(--sa-screw-head) calc(100% - 7px) 9px / 7px 7px no-repeat,
+    var(--sa-screw-head) calc(100% - 7px) calc(100% - 9px) / 7px 7px no-repeat,
+    linear-gradient(to bottom, rgb(255 255 255 / 0.05), transparent 40%),
+    var(--slab);
+}
+:root[data-skin="sad"] .stack__slab--system {
+  --sa-screw: #858b93;
+  --sa-screw-slot: #4b5057;
+  --sa-led-off: #8a9098;
+  border-color: rgb(255 255 255 / 0.2);
+}
+
+/* Two LEDs on the right ear: power above, steady; activity below, flickering. Lit by default. */
+:root[data-skin="sad"] .stack__slab::before,
+:root[data-skin="sad"] .stack__slab::after {
+  content: "";
+  position: absolute;
+  right: 7.5px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--sa-led);
+  box-shadow: 0 0 6px var(--sa-led-glow);
+}
+:root[data-skin="sad"] .stack__slab::before {
+  top: calc(50% - 8px);
+}
+:root[data-skin="sad"] .stack__slab::after {
+  top: calc(50% + 2px);
+}
+
+/* Each unit is busy at its own pace. */
+:root[data-skin="sad"] .stack__slab:nth-child(1) { --sa-activity: 2.3s; }
+:root[data-skin="sad"] .stack__slab:nth-child(2) { --sa-activity: 3.1s; }
+:root[data-skin="sad"] .stack__slab:nth-child(3) { --sa-activity: 1.9s; }
+:root[data-skin="sad"] .stack__slab:nth-child(4) { --sa-activity: 2.7s; }
+:root[data-skin="sad"] .stack__slab:nth-child(5) { --sa-activity: 1.7s; }
+
+/* Powered off: every LED dark, whatever the reader asked for. */
+:root[data-skin="sad"] .stack:has(.sa-power[data-state="off"]) .stack__slab::before,
+:root[data-skin="sad"] .stack:has(.sa-power[data-state="off"]) .stack__slab::after {
+  animation: none;
+  background: var(--sa-led-off);
+  box-shadow: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* The rack boots as the stack builds: each unit’s LEDs come on once it has landed, bottom first. */
+  :root[data-skin="sad"] .stack__slab::before {
+    animation: sa-led-on 0.12s both;
+    animation-delay: calc(1.15s + var(--build) * 0.16s);
+  }
+  :root[data-skin="sad"] .stack__slab::after {
+    animation:
+      sa-led-on 0.12s both,
+      sa-activity var(--sa-activity) steps(1) infinite;
+    animation-delay: calc(1.15s + var(--build) * 0.16s), calc(1.5s + var(--build) * 0.16s);
+  }
+
+  /* After a power cycle, a slower boot, unit by unit. A new animation name starts it over. */
+  :root[data-skin="sad"] .stack:has(.sa-power[data-state="up"]) .stack__slab::before {
+    animation: sa-led-on-again 0.12s both;
+    animation-delay: calc(0.25s + var(--build) * 0.28s);
+  }
+  :root[data-skin="sad"] .stack:has(.sa-power[data-state="up"]) .stack__slab::after {
+    animation:
+      sa-led-on-again 0.12s both,
+      sa-activity var(--sa-activity) steps(1) infinite;
+    animation-delay: calc(0.25s + var(--build) * 0.28s), calc(0.6s + var(--build) * 0.28s);
+  }
+}
+
+@keyframes sa-led-on {
+  from {
+    background: var(--sa-led-off);
+    box-shadow: none;
+  }
+}
+@keyframes sa-led-on-again {
+  from {
+    background: var(--sa-led-off);
+    box-shadow: none;
+  }
+}
+@keyframes sa-activity {
+  0%, 9%, 26%, 44%, 63%, 81% {
+    opacity: 1;
+  }
+  6%, 22%, 41%, 60%, 78% {
+    opacity: 0.25;
+  }
+}
+
+/* The rails the units are mounted on, with their square holes; they stand clear of a unit slid out on hover. */
+.sa-rail {
+  position: absolute;
+  top: -12px;
+  bottom: -12px;
+  width: 8px;
+  border-radius: 2px;
+  background:
+    linear-gradient(to bottom, var(--bg) 0 4px, transparent 4px) center 5px / 4px 13px repeat-y,
+    var(--sa-rail);
+}
+.sa-rail[data-side="left"] {
+  left: -17px;
+}
+.sa-rail[data-side="right"] {
+  right: -17px;
+}
+
+/* The power button, above the top right corner of the rack. */
+.sa-power {
+  position: absolute;
+  top: -42px;
+  right: 0;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--sa-panel);
+  border: 1px solid var(--sa-metal);
+  pointer-events: auto;
+  cursor: pointer;
+}
+.sa-power:hover {
+  border-color: #4a4f57;
+}
+.sa-power svg {
+  fill: none;
+  stroke: var(--sa-led);
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  filter: drop-shadow(0 0 3px var(--sa-led-glow));
+}
+.sa-power[data-state="off"] svg {
+  stroke: #4a4f57;
+  filter: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* While the rack boots again, the button blinks. */
+  .sa-power[data-state="up"] svg {
+    animation: sa-blink 0.36s steps(1) 4;
+  }
+}
+
+@keyframes sa-blink {
+  50% {
+    stroke: #4a4f57;
+    filter: none;
+  }
+}
+
+/* ---------- The room: racks blinking down the aisle ---------- */
+
+.sa-room {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* ---------- The timeline: a hard drive with its cover off ---------- */
+
+/*
+ * Above the section’s title, small, as the other themes place theirs: its bottom edge just above
+ * where the title begins, the section’s own top padding, so it stays clear of it at every width. On
+ * screens wide enough, beside the title at full size. Drawn at full size and scaled from its bottom
+ * corner, so it keeps every detail.
+ */
+.sa-hdd {
+  position: absolute;
+  bottom: calc(100% - clamp(4.5rem, 10vw, 8.5rem) + 0.9rem);
+  right: clamp(4%, 10vw, 10%);
+  width: 120px;
+  height: 150px;
+  border-radius: 9px;
+  background: linear-gradient(to bottom, #222528, #191b1d);
+  border: 1px solid var(--sa-metal);
+  box-shadow: 0 10px 30px rgb(0 0 0 / 0.45);
+  transform: scale(0.36);
+  transform-origin: bottom right;
+  pointer-events: auto;
+  cursor: pointer;
+}
+@media (min-width: 64rem) {
+  .sa-hdd {
+    top: clamp(4.5rem, 10vw, 8.5rem);
+    bottom: auto;
+    right: 0;
+    transform: none;
+  }
+}
+.sa-hdd__platter {
+  position: absolute;
+  left: 13px;
+  top: 12px;
+  width: 94px;
+  height: 94px;
+  border-radius: 50%;
+  /* Brushed metal: the light catches it in a few places, and the reflections turn as it spins. */
+  background:
+    repeating-radial-gradient(circle, rgb(0 0 0 / 0.06) 0 1px, transparent 1px 3px),
+    conic-gradient(#7c8187, #cdd1d6 10%, #868b91 22%, #b9bdc2 36%, #777c82 50%, #d3d7db 63%, #82878d 77%, #b2b6bb 90%, #7c8187);
+  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.35);
+}
+.sa-hdd__hub {
+  position: absolute;
+  left: 49px;
+  top: 48px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #5a5f64 0 3px, #a3a8ad 3.5px 9px, #6d7277 9.5px);
+}
+/* The arm swings from its pivot in the corner; its head reads at the tip. */
+.sa-hdd__arm {
+  position: absolute;
+  left: 99px;
+  top: 121px;
+  width: 64px;
+  height: 5px;
+  border-radius: 3px;
+  background: linear-gradient(to bottom, #b8bcc1, #7e8389);
+  transform-origin: 0 50%;
+  transform: rotate(-128deg);
+}
+.sa-hdd__arm::after {
+  content: "";
+  position: absolute;
+  right: -2px;
+  top: -2px;
+  width: 9px;
+  height: 9px;
+  border-radius: 2px;
+  background: #5f6469;
+}
+.sa-hdd__pivot {
+  position: absolute;
+  left: 90px;
+  top: 112px;
+  width: 19px;
+  height: 19px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #3b3f43 0 2.5px, #8e9399 3px 7px, #55595e 7.5px);
+}
+.sa-hdd__led {
+  position: absolute;
+  left: 12px;
+  bottom: 11px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--sa-led-off);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .sa-hdd__platter {
+    animation: sa-spin 1.6s linear infinite;
+  }
+  .sa-hdd__arm {
+    animation: sa-seek 5.2s infinite;
+  }
+  .sa-hdd__led {
+    animation: sa-read 5.2s steps(1) infinite;
+  }
+  /* Clicked, the drive gets busy: short, quick seeks, the LED almost always lit. */
+  .sa-hdd[data-busy] .sa-hdd__arm {
+    animation: sa-seek-busy 0.6s infinite;
+  }
+  .sa-hdd[data-busy] .sa-hdd__led {
+    animation: sa-read-busy 0.16s steps(1) infinite;
+  }
+}
+
+@keyframes sa-spin {
+  to {
+    transform: rotate(1turn);
+  }
+}
+/* Seeks are quick moves with long reads between them, each to a track of its own. */
+@keyframes sa-seek {
+  0%, 14% { transform: rotate(-128deg); }
+  18%, 31% { transform: rotate(-146deg); }
+  34%, 52% { transform: rotate(-120deg); }
+  56%, 66% { transform: rotate(-139deg); }
+  70%, 86% { transform: rotate(-133deg); }
+  90%, 100% { transform: rotate(-128deg); }
+}
+@keyframes sa-read {
+  0%, 18%, 34%, 56%, 70%, 90% { background: var(--sa-led-off); box-shadow: none; }
+  3%, 21%, 38%, 59%, 74%, 93% { background: var(--sa-led); box-shadow: 0 0 5px var(--sa-led-glow); }
+}
+@keyframes sa-seek-busy {
+  0% { transform: rotate(-125deg); }
+  25% { transform: rotate(-147deg); }
+  50% { transform: rotate(-121deg); }
+  75% { transform: rotate(-140deg); }
+  100% { transform: rotate(-125deg); }
+}
+@keyframes sa-read-busy {
+  0% { background: var(--sa-led); box-shadow: 0 0 5px var(--sa-led-glow); }
+  50% { background: var(--sa-led-off); box-shadow: none; }
+}
+
+/* ---------- The footer: a server fan on its line ---------- */
+
+/* Standing on the footer line, at the right edge of the page column. */
+.sa-fan {
+  position: absolute;
+  bottom: calc(100% - 1px);
+  right: max(var(--gutter), (100% - var(--page)) / 2);
+  width: clamp(40px, 4.5vw, 52px);
+  pointer-events: auto;
+  cursor: pointer;
+}
+.sa-fan svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.sa-fan__frame {
+  fill: var(--sa-panel);
+  stroke: var(--sa-metal);
+}
+.sa-fan__hole {
+  fill: var(--bg);
+}
+.sa-fan__opening {
+  fill: #07080a;
+}
+.sa-fan__blades {
+  fill: #2f3337;
+  transform-box: view-box;
+  transform-origin: 24px 24px;
+}
+.sa-fan__hub {
+  fill: #26292c;
+}
+.sa-fan__sticker {
+  fill: var(--sa-amber);
+  opacity: 0.85;
+}
+.sa-fan__grille {
+  fill: none;
+  stroke: #3a3e42;
+  stroke-width: 1.1;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .sa-fan__blades {
+    animation: sa-spin 0.9s linear infinite;
+  }
+}
+
+/* ---------- The live panel: dots that beat like LEDs ---------- */
+
+@media (prefers-reduced-motion: no-preference) {
+  :root[data-skin="sad"] .live__dot[data-state="ok"] {
+    animation: sa-heartbeat 2.6s ease-in-out infinite;
+  }
+  :root[data-skin="sad"] .live__item:nth-child(3n + 2) .live__dot[data-state="ok"],
+  :root[data-skin="sad"] tr:nth-child(3n + 2) .live__dot[data-state="ok"] {
+    animation-delay: -0.9s;
+  }
+  :root[data-skin="sad"] .live__item:nth-child(3n) .live__dot[data-state="ok"],
+  :root[data-skin="sad"] tr:nth-child(3n) .live__dot[data-state="ok"] {
+    animation-delay: -1.7s;
+  }
+}
+
+@keyframes sa-heartbeat {
+  0%, 100% {
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--status-ok) 22%, transparent);
+  }
+  50% {
+    box-shadow: 0 0 0 5px color-mix(in srgb, var(--status-ok) 8%, transparent);
+  }
+}
+
+/* ---------- The missing page: an unplugged cable ---------- */
+
+.sa-cable {
+  position: absolute;
+  right: 0;
+  bottom: 0.5rem;
+  width: 64px;
+  pointer-events: auto;
+  cursor: pointer;
+}
+/* Beside the text where the page is wide enough for it to stay clear; below it, in the corner. */
+@media (min-width: 64rem) {
+  .sa-cable {
+    right: 6%;
+    top: 50%;
+    bottom: auto;
+    width: 90px;
+    transform: translateY(-50%);
+  }
+}
+.sa-cable svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+.sa-cable__panel {
+  fill: var(--sa-panel);
+  stroke: var(--sa-metal);
+}
+.sa-cable__socket {
+  fill: #040405;
+}
+.sa-cable__led {
+  fill: var(--sa-led-off);
+}
+.sa-cable__body {
+  fill: rgb(220 228 238 / 0.16);
+  stroke: rgb(220 228 238 / 0.5);
+}
+.sa-cable__contacts path {
+  stroke: #d6aa4f;
+  stroke-width: 1.1;
+}
+.sa-cable__plug {
+  transform-box: view-box;
+  transform-origin: 45px 70px;
+  transform: rotate(7deg);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .sa-cable__plug {
+    animation: sa-sway 5s ease-in-out infinite alternate;
+  }
+  /* The plug goes in, holds while the link light blinks, and drops out again. */
+  .sa-cable[data-trying] .sa-cable__plug {
+    animation: sa-plug-in 2.4s var(--ease) both;
+  }
+}
+/* For every reader, the link light still answers the click. */
+.sa-cable[data-trying] .sa-cable__led {
+  animation: sa-link 2.4s steps(1) both;
+}
+
+@keyframes sa-sway {
+  from {
+    transform: rotate(7deg);
+  }
+  to {
+    transform: rotate(3deg);
+  }
+}
+@keyframes sa-plug-in {
+  0% {
+    transform: rotate(7deg);
+  }
+  22%,
+  68% {
+    transform: translateY(-58px) rotate(0deg);
+  }
+  100% {
+    transform: rotate(7deg);
+  }
+}
+@keyframes sa-link {
+  0%, 26%, 38%, 50%, 70% {
+    fill: var(--sa-led-off);
+  }
+  30%, 42%, 54% {
+    fill: var(--sa-led);
+  }
+}
+
+@media print {
+  :root[data-skin="sad"] .stack__slab::before,
+  :root[data-skin="sad"] .stack__slab::after {
+    display: none;
+  }
+}
