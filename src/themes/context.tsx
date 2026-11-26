@@ -17,19 +17,21 @@ const ThemeContext = createContext<ThemeState>({ scheduled: null, active: null, 
 
 type Props = {
   scheduled: ThemeDefinition | null;
+  /** Whether `scheduled` is a preview from `?skin=<id>`: its on and off then last for the tab. */
+  previewing: boolean;
   /** Already loaded by `main.tsx` when the theme starts on, so the first paint is themed. */
   module: ThemeModule | null;
   children: ReactNode;
 };
 
-export function ThemeProvider({ scheduled, module: initialModule, children }: Props) {
+export function ThemeProvider({ scheduled, previewing, module: initialModule, children }: Props) {
   const [module, setModule] = useState(initialModule);
   const [on, setOnState] = useState(initialModule !== null);
 
   const setOn = useCallback(
     (next: boolean) => {
       if (!scheduled) return;
-      rememberOff(scheduled, !next);
+      rememberOff(scheduled, !next, previewing);
       if (!next) {
         applyTheme(null);
         setOnState(false);
@@ -44,7 +46,7 @@ export function ThemeProvider({ scheduled, module: initialModule, children }: Pr
         })
         .catch(() => {});
     },
-    [scheduled, module],
+    [scheduled, previewing, module],
   );
 
   const value = useMemo<ThemeState>(

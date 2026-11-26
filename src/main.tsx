@@ -14,13 +14,13 @@ import type { ThemeModule } from "./themes/types";
 
 // The theme's code and CSS load before the first render, so the page never shows unthemed first.
 // If they can't load, the site simply starts without the theme.
-const { scheduled, off } = resolveTheme();
+const { scheduled, off, previewing } = resolveTheme();
 const module: ThemeModule | null = scheduled && !off ? await scheduled.load().catch(() => null) : null;
 if (module) applyTheme(scheduled);
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <ThemeProvider scheduled={scheduled} module={module}>
+    <ThemeProvider scheduled={scheduled} previewing={previewing} module={module}>
       <App />
     </ThemeProvider>
   </StrictMode>,

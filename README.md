@@ -78,7 +78,8 @@ chunk, loaded before the first render only while the theme is on, so on every ot
   and an `index.tsx` that imports the theme's CSS and exports what it adds.
 - **Remove:** delete the folder.
 - **Preview:** `?skin=<id>` shows a theme on any day, `?skin=none` shows the site without themes, `?skin=auto`
-  goes back to the calendar. The preview lasts for the browser tab.
+  goes back to the calendar. The preview lasts for the browser tab, and so does turning it off from the footer:
+  a preview never changes the choice a reader made for the real occasion.
 
 A theme can do any of these, all optional:
 

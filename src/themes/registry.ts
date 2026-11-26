@@ -105,18 +105,25 @@ export type ThemeChoice = {
   scheduled: ThemeDefinition | null;
   /** Whether the reader turned it off for this occurrence. */
   off: boolean;
+  /** Whether `scheduled` comes from `?skin=<id>` rather than from the calendar. */
+  previewing: boolean;
 };
 
 export function resolveTheme(date = new Date()): ThemeChoice {
   const preview = previewFromAddress();
-  if (preview === "none") return { scheduled: null, off: false };
-  const scheduled = themeById(preview) ?? themeForDate(date) ?? null;
-  // A preview is a deliberate request: it ignores an earlier "off".
-  const off = scheduled !== null && !preview && read(local, offKey(scheduled, date)) === "1";
-  return { scheduled, off };
+  if (preview === "none") return { scheduled: null, off: false, previewing: false };
+  const previewed = themeById(preview);
+  const scheduled = previewed ?? themeForDate(date) ?? null;
+  // A preview keeps its own "off" for the tab, apart from the reader's real choice.
+  const storage = previewed ? session : local;
+  const off = scheduled !== null && read(storage, offKey(scheduled, date)) === "1";
+  return { scheduled, off, previewing: previewed !== undefined };
 }
 
-/** Remembers, until the occasion comes round again, that the reader wants the theme off (or on again). */
-export function rememberOff(theme: ThemeDefinition, off: boolean, date = new Date()): void {
-  write(local, offKey(theme, date), off ? "1" : null);
+/**
+ * Remembers, until the occasion comes round again, that the reader wants the theme off (or on again).
+ * While previewing, the choice lasts for the tab and never touches the real one.
+ */
+export function rememberOff(theme: ThemeDefinition, off: boolean, previewing: boolean, date = new Date()): void {
+  write(previewing ? session : local, offKey(theme, date), off ? "1" : null);
 }
