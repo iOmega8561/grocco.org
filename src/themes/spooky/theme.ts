@@ -1,6 +1,6 @@
 import { defineTheme } from "../types";
 
-/** The last week of October, ending on Halloween night. */
+/** The last days of October, ending on Halloween night. */
 export default defineTheme({
   id: "spooky",
   name: { en: "the Halloween theme", it: "il tema di Halloween" },

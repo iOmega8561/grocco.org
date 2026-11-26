@@ -70,7 +70,7 @@ Routes are `/<lang>/…`; `/` sends visitors to the language their browser prefe
 
 ## Seasonal themes
 
-For a week around an occasion, the site can wear a theme. Every folder in `src/themes/` with a `theme.ts` is
+For a few days around an occasion, the site can wear a theme. Every folder in `src/themes/` with a `theme.ts` is
 one, discovered automatically. Only the definitions are bundled up front: a theme's code and CSS are a separate
 chunk, loaded before the first render only while the theme is on, so on every other day they cost nothing.
 
@@ -84,7 +84,7 @@ A theme can do any of these, all optional:
 
 | Part | What it is |
 |---|---|
-| `when` | `{ from: "10-25", to: "10-31" }`, repeated every year (a window may wrap over the new year), or a function of the date for occasions that move |
+| `when` | `{ from: "10-30", to: "10-31" }`, repeated every year (a window may wrap over the new year), or a function of the date for occasions that move |
 | `scheme` | Forces light or dark while the theme is on; images and videos with a dark variant follow it |
 | CSS | Scoped to `:root[data-skin="<id>"]`: redefine the tokens of `src/styles/tokens.css`, restyle components by class |
 | `slots` | Components placed in the named slots of the pages (`hero.stack`, `featured`, `timeline`, `project.hero`, `footer`, `notFound`) |
