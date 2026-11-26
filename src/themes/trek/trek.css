@@ -1,0 +1,346 @@
+/*
+ * Star Trek. Always dark: deep space behind the page, cool white text, and a stack that goes from the
+ * dark of space at the top to a pale blue at the base. The site keeps its own type and layout; the
+ * theme adds a sky, a few ships and the effects of warp.
+ *
+ * Everything is scoped to [data-skin="trek"], so it stops applying the moment the theme is off.
+ */
+
+:root[data-skin="trek"] {
+  --bg: #04060c;
+  --surface: #0b1020;
+  --surface-2: #111a2e;
+  --ink: #eef3ff;
+  --ink-2: #9ba8c4;
+  --ink-3: #75809b;
+  --line: #1e2740;
+  --link: #7fb4ff;
+  --focus: #7fb4ff;
+
+  --slab-interface: #0b1020;
+  --slab-interface-ink: #eef3ff;
+  --slab-application: #16213a;
+  --slab-application-ink: #eef3ff;
+  --slab-container: #243659;
+  --slab-container-ink: #eef3ff;
+  --slab-virtualization: #3d5e9e;
+  --slab-virtualization-ink: #f4f7ff;
+  --slab-system: #a9c8ff;
+  --slab-system-ink: #050a18;
+
+  /* The featured panel lets the stars show through, dimmed. */
+  --featured-bg: rgb(2 4 10 / 0.7);
+  --featured-ink: #eef3ff;
+  --featured-ink-2: #9ba8c4;
+  --status-ok: #6ee7b7;
+  --status-warn: #ffb347;
+}
+
+/* ---------- The sky ---------- */
+
+.st-sky {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 60% 45% at 82% 8%, rgb(58 92 170 / 0.16), transparent 70%),
+    radial-gradient(ellipse 55% 40% at 8% 92%, rgb(104 70 160 / 0.1), transparent 70%);
+}
+
+.st-sky__stars {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* A distant ship going to warp: a point that stretches into a streak and is gone in a flash. */
+.st-flyby {
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  border-radius: 999px;
+  background: #fff;
+  opacity: 0;
+  transform-origin: left center;
+}
+
+/* ---------- The flagship, over the stack ---------- */
+
+.st-flagship {
+  position: absolute;
+  right: clamp(0.25rem, 2vw, 1.5rem);
+  bottom: calc(100% + 0.9rem);
+  width: clamp(124px, 13vw, 184px);
+  pointer-events: auto;
+  cursor: pointer;
+  transform-origin: left center;
+  -webkit-tap-highlight-color: transparent;
+}
+.st-flagship svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+  filter: drop-shadow(0 0 18px rgb(127 180 255 / 0.18));
+}
+@media (max-width: 44rem) {
+  .st-flagship {
+    width: 96px;
+    bottom: calc(100% - 0.3rem);
+  }
+}
+.st-flagship[data-phase="gone"] {
+  visibility: hidden;
+}
+
+.st-flagship__flash {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 46px;
+  height: 46px;
+  margin: -23px 0 0 -23px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #fff 0, rgb(170 215 255 / 0.9) 25%, transparent 70%);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.st-ship__exhaust {
+  opacity: 0.9;
+}
+
+/* ---------- The shuttle crossing the featured panel ---------- */
+
+.st-drift {
+  position: absolute;
+  top: clamp(1.25rem, 4.5vw, 3.25rem);
+  left: 104%;
+  width: clamp(40px, 4.2vw, 58px);
+}
+.st-drift__ship {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+/* ---------- The shuttle adrift on the missing page ---------- */
+
+.st-adrift {
+  position: absolute;
+  right: 4%;
+  top: 50%;
+  width: clamp(72px, 15vw, 170px);
+  translate: 0 -50%;
+}
+.st-adrift__ship {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+@media (max-width: 44rem) {
+  .st-adrift {
+    top: 1rem;
+    width: 60px;
+    translate: none;
+  }
+}
+
+/* ---------- The probe over the timeline ---------- */
+
+.st-probe {
+  position: absolute;
+  top: clamp(0.75rem, 3.5vw, 2.75rem);
+  right: clamp(4%, 10vw, 10%);
+  width: clamp(64px, 7vw, 100px);
+}
+.st-probe svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* ---------- A planet on each project page ---------- */
+
+.st-planet {
+  position: absolute;
+  top: clamp(0.5rem, 3vw, 2rem);
+  width: clamp(56px, 8vw, 112px);
+}
+.st-planet[data-side="left"] {
+  left: clamp(0rem, 6vw, 8%);
+}
+.st-planet[data-side="right"] {
+  right: clamp(0rem, 6vw, 8%);
+}
+.st-planet svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* ---------- Motion, only for readers who did not ask for less ---------- */
+
+@media (prefers-reduced-motion: no-preference) {
+  /* Drops out of warp once the stack has built (see the stack's own animation), and later on its return. */
+  .st-flagship[data-phase="arriving"] {
+    animation: st-arrive 1.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+  .st-flagship[data-phase="arriving"][data-first] {
+    animation-delay: 1.15s;
+  }
+  .st-flagship[data-phase="here"] svg {
+    animation: st-hold 7s ease-in-out infinite;
+  }
+  .st-flagship[data-phase="leaving"] {
+    animation: st-jump 0.95s cubic-bezier(0.6, 0, 0.9, 0.4) forwards;
+  }
+  .st-flagship[data-phase="leaving"] .st-flagship__flash {
+    animation: st-flash 0.7s ease-out 0.42s both;
+  }
+  .st-ship__exhaust {
+    animation: st-glow 2.4s ease-in-out infinite;
+  }
+
+  .st-flyby {
+    animation: st-flyby 1.6s cubic-bezier(0.7, 0, 0.9, 0.5) both;
+  }
+
+  .st-drift[data-seen] {
+    animation: st-drift 52s linear 1.5s infinite;
+  }
+  .st-drift__ship {
+    animation: st-hold 6s ease-in-out infinite;
+  }
+
+  .st-adrift__ship {
+    animation: st-tumble 40s linear infinite;
+  }
+  .st-adrift {
+    animation: st-float 9s ease-in-out infinite;
+  }
+
+  .st-probe svg {
+    animation: st-turn 16s ease-in-out infinite;
+  }
+  .st-probe__beacon {
+    animation: st-beacon 2.2s steps(1, end) infinite;
+  }
+
+  .st-planet svg {
+    animation: st-float 12s ease-in-out infinite;
+  }
+}
+
+@keyframes st-arrive {
+  0% {
+    opacity: 0;
+    transform: translateX(70vw) scaleX(3.2);
+  }
+  18% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes st-hold {
+  50% {
+    transform: translateY(-4px);
+  }
+}
+/* A breath back, then the stretch to warp. */
+@keyframes st-jump {
+  0% {
+    transform: none;
+  }
+  30% {
+    transform: translateX(10px) scaleX(0.94);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(-120vw) scaleX(5);
+  }
+}
+@keyframes st-flash {
+  0% {
+    opacity: 0;
+    transform: scale(0.2);
+  }
+  25% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: scale(2.4);
+  }
+}
+@keyframes st-glow {
+  50% {
+    opacity: 0.55;
+  }
+}
+@keyframes st-flyby {
+  0% {
+    opacity: 0;
+    transform: none;
+  }
+  20% {
+    opacity: 0.9;
+    transform: none;
+  }
+  70% {
+    opacity: 0.9;
+    width: 3px;
+    box-shadow: 0 0 6px 2px rgb(170 215 255 / 0.8);
+  }
+  80% {
+    opacity: 1;
+    width: 160px;
+    transform: translateX(40px);
+    box-shadow: 0 0 8px 2px rgb(170 215 255 / 0.9);
+  }
+  100% {
+    opacity: 0;
+    width: 260px;
+    transform: translateX(240px);
+  }
+}
+@keyframes st-drift {
+  from {
+    left: 104%;
+  }
+  to {
+    left: -8%;
+  }
+}
+@keyframes st-tumble {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes st-float {
+  50% {
+    transform: translateY(-8px);
+  }
+}
+@keyframes st-turn {
+  0%,
+  100% {
+    transform: rotate(-7deg);
+  }
+  50% {
+    transform: rotate(7deg);
+  }
+}
+@keyframes st-beacon {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.15;
+  }
+}
