@@ -1,0 +1,452 @@
+/*
+ * Halloween. Always dark: a violet night, bone-coloured text and pumpkin orange as the only warm
+ * colour. Light things (the ghost) glow white, dark things (bats, spider, cat) get a violet halo
+ * as if moonlit, the pumpkin glows orange.
+ *
+ * Everything is scoped to [data-skin="spooky"], so it stops applying the moment the theme is off.
+ */
+
+:root[data-skin="spooky"] {
+  --bg: #0d0b12;
+  --surface: #17131d;
+  --surface-2: #1f1928;
+  --ink: #f2ebe0;
+  --ink-2: #b3a9b8;
+  --ink-3: #8a7f91;
+  --line: #2f2639;
+  --link: #ff8a2a;
+  --focus: #ff8a2a;
+
+  /* The stack, from the ground up: embers at the base, night at the top. */
+  --slab-system: #ff7b1a;
+  --slab-system-ink: #1c0d02;
+  --slab-virtualization: #b8460f;
+  --slab-virtualization-ink: #fff1e2;
+  --slab-container: #4e2a78;
+  --slab-container-ink: #f2ebe0;
+  --slab-application: #2a2035;
+  --slab-application-ink: #f2ebe0;
+  --slab-interface: #17131d;
+  --slab-interface-ink: #f2ebe0;
+
+  --featured-bg: #07060a;
+  --featured-ink: #f2ebe0;
+  --featured-ink-2: #a99fae;
+  --status-ok: #8fe06a;
+  --status-warn: #ff8a2a;
+
+  --hw-shadow: #3b3146;
+  --hw-moonlit: drop-shadow(0 0 10px rgb(132 92 196 / 0.55));
+}
+
+:root[data-skin="spooky"] .featured {
+  background-image: radial-gradient(ellipse 70% 45% at 50% 0%, rgb(78 42 120 / 0.38), transparent 70%);
+}
+
+/* ---------- The pumpkin, on top of the stack ---------- */
+
+.hw-pumpkin {
+  position: absolute;
+  right: clamp(0.75rem, 3vw, 2rem);
+  bottom: calc(100% - 0.6rem);
+  width: clamp(64px, 7vw, 92px);
+  pointer-events: auto;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.hw-pumpkin svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  transition: filter 0.6s ease;
+}
+.hw-pumpkin[data-lit] svg {
+  filter: drop-shadow(0 0 14px rgb(255 128 32 / 0.5)) drop-shadow(0 0 40px rgb(255 110 20 / 0.25));
+}
+
+.hw-pumpkin__face {
+  fill: #2a1206;
+  transition: fill 0.4s ease;
+}
+.hw-pumpkin[data-lit] .hw-pumpkin__face {
+  fill: url(#hw-flame);
+}
+
+.hw-pumpkin__smoke {
+  position: absolute;
+  left: 48%;
+  bottom: 70%;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: rgb(200 190 210 / 0.5);
+  filter: blur(5px);
+  opacity: 0;
+}
+
+/* ---------- The ghost peeking into the featured panel ---------- */
+
+.hw-peek {
+  position: absolute;
+  left: 0;
+  top: clamp(1.25rem, 5vw, 3.5rem);
+  width: clamp(64px, 9vw, 112px);
+  transform: translateX(-100%);
+  transition: transform 1.4s var(--ease);
+  pointer-events: auto;
+}
+.hw-peek[data-seen] {
+  transform: translateX(-42%);
+}
+.hw-peek[data-seen][data-hiding] {
+  transform: translateX(-92%);
+  transition-duration: 0.35s;
+}
+
+.hw-ghost {
+  display: block;
+  width: 100%;
+  height: auto;
+  opacity: 0.94;
+  filter: drop-shadow(0 0 18px rgb(220 205 255 / 0.35));
+}
+
+/* ---------- The 404 ghost ---------- */
+
+.hw-lost {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  width: clamp(76px, 20vw, 230px);
+  transform: translateY(-50%);
+}
+@media (max-width: 44rem) {
+  .hw-lost {
+    top: 0.75rem;
+    width: 56px;
+    transform: none;
+  }
+}
+
+/* ---------- The spider over the timeline ---------- */
+
+.hw-spider {
+  position: absolute;
+  top: 0;
+  right: clamp(4%, 12vw, 12%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  --drop: clamp(2rem, 9vw, 7rem);
+  color: var(--hw-shadow);
+}
+.hw-spider__thread {
+  width: 1px;
+  height: var(--drop);
+  background: linear-gradient(rgb(242 235 224 / 0), rgb(242 235 224 / 0.4));
+  transition: height 1.2s var(--ease);
+}
+.hw-spider__body {
+  width: clamp(34px, 3.6vw, 46px);
+  height: auto;
+  margin-top: -6px;
+  filter: var(--hw-moonlit);
+  pointer-events: auto;
+  cursor: pointer;
+}
+.hw-spider[data-up] .hw-spider__thread {
+  height: 0.25rem;
+  transition-duration: 0.7s;
+}
+
+/* ---------- The cat on the footer line ---------- */
+
+.hw-cat {
+  position: absolute;
+  bottom: calc(100% - 1px);
+  right: max(var(--gutter), (100% - var(--page)) / 2);
+  width: clamp(56px, 6vw, 76px);
+  color: #050407;
+}
+.hw-cat svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+  filter: var(--hw-moonlit);
+}
+.hw-cat__eyes ellipse {
+  filter: drop-shadow(0 0 3px rgb(255 176 46 / 0.9));
+}
+
+/* ---------- The bat asleep on a project page ---------- */
+
+.hw-hanging {
+  position: absolute;
+  top: 0;
+  width: clamp(34px, 3.8vw, 52px);
+  color: #463a53;
+}
+.hw-hanging[data-side="left"] {
+  left: clamp(0.5rem, 8vw, 10%);
+}
+.hw-hanging[data-side="right"] {
+  right: clamp(0.5rem, 8vw, 10%);
+}
+.hw-hanging svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  transform-origin: 50% 0;
+  filter: var(--hw-moonlit);
+}
+
+/* ---------- The night over everything ---------- */
+
+.hw-fog {
+  position: absolute;
+  inset: auto 0 0;
+  height: 22vh;
+  background:
+    radial-gradient(ellipse 40% 60% at 20% 100%, rgb(150 120 190 / 0.13), transparent 70%),
+    radial-gradient(ellipse 45% 55% at 75% 100%, rgb(200 190 220 / 0.09), transparent 70%),
+    radial-gradient(ellipse 30% 50% at 50% 100%, rgb(120 90 170 / 0.1), transparent 70%);
+  background-size: 160% 100%;
+  background-position: 0% 100%;
+}
+
+.hw-flight {
+  position: absolute;
+  inset: 0;
+}
+.hw-flyer {
+  position: absolute;
+  left: 0;
+  color: #43384f;
+  transform: translateX(-12vw);
+  filter: drop-shadow(0 0 4px rgb(160 120 220 / 0.55));
+}
+.hw-flyer svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  fill: currentColor;
+  overflow: visible;
+}
+.hw-flight[data-reverse] .hw-flyer__bat {
+  transform-box: view-box;
+  transform-origin: center;
+  transform: scaleX(-1);
+}
+.hw-flyer__wings path {
+  transform-box: view-box;
+  transform-origin: 40px 20px;
+}
+
+/* ---------- Motion, only for readers who did not ask for less ---------- */
+
+@media (prefers-reduced-motion: no-preference) {
+  /* The pumpkin lands once the stack has built (see the stack's own animation). */
+  .hw-pumpkin {
+    animation: hw-land 0.9s var(--ease) 1.15s both;
+  }
+  .hw-pumpkin:hover svg {
+    animation: hw-wobble 0.6s ease-in-out;
+  }
+  .hw-pumpkin[data-lit] .hw-pumpkin__face {
+    animation: hw-flicker 3.2s steps(1, end) infinite;
+  }
+  .hw-pumpkin__smoke {
+    animation: hw-smoke 1.6s ease-out forwards;
+  }
+
+  .hw-peek .hw-ghost,
+  .hw-lost .hw-ghost {
+    animation: hw-float 4.5s ease-in-out infinite;
+  }
+  .hw-peek[data-seen] .hw-ghost__hand {
+    transform-box: fill-box;
+    transform-origin: 0% 60%;
+    animation: hw-wave 1.1s ease-in-out 1.4s 3;
+  }
+  .hw-lost .hw-ghost__eyes {
+    animation: hw-search 6s ease-in-out infinite;
+  }
+
+  .hw-spider:not([data-up]) {
+    animation: hw-bob 5s ease-in-out infinite;
+  }
+
+  .hw-cat__tail {
+    transform-box: view-box;
+    transform-origin: 56px 76px;
+    animation: hw-tail 4s ease-in-out infinite;
+  }
+  .hw-cat__eyes {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: hw-blink 7s ease-in-out infinite;
+  }
+
+  .hw-hanging svg {
+    animation: hw-sway 6s ease-in-out infinite;
+  }
+
+  .hw-fog {
+    animation: hw-drift 38s ease-in-out infinite alternate;
+  }
+
+  .hw-flyer {
+    animation: hw-fly 8s cubic-bezier(0.3, 0.1, 0.7, 0.9) both;
+  }
+  .hw-flight[data-reverse] .hw-flyer {
+    animation-name: hw-fly-back;
+  }
+  .hw-flyer svg {
+    animation: hw-dip 1.3s ease-in-out infinite alternate;
+  }
+  .hw-flyer__wings path {
+    animation: hw-flap 0.2s ease-in-out infinite alternate;
+  }
+}
+
+@keyframes hw-land {
+  0% {
+    opacity: 0;
+    transform: translateY(-46px) rotate(-8deg);
+  }
+  60% {
+    opacity: 1;
+    transform: translateY(3px) rotate(2deg);
+  }
+  80% {
+    transform: translateY(-4px) rotate(-1deg);
+  }
+  100% {
+    transform: none;
+  }
+}
+@keyframes hw-wobble {
+  25% {
+    transform: rotate(-5deg);
+  }
+  60% {
+    transform: rotate(4deg);
+  }
+}
+@keyframes hw-flicker {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  12% {
+    opacity: 0.82;
+  }
+  15% {
+    opacity: 1;
+  }
+  47% {
+    opacity: 0.9;
+  }
+  52% {
+    opacity: 0.74;
+  }
+  55% {
+    opacity: 1;
+  }
+  81% {
+    opacity: 0.88;
+  }
+}
+@keyframes hw-smoke {
+  0% {
+    opacity: 0.8;
+    transform: translate(0, 0) scale(0.6);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-10px, -60px) scale(2.6);
+  }
+}
+@keyframes hw-float {
+  50% {
+    transform: translateY(-10px);
+  }
+}
+@keyframes hw-wave {
+  50% {
+    transform: rotate(-24deg);
+  }
+}
+@keyframes hw-search {
+  0%,
+  20%,
+  100% {
+    transform: none;
+  }
+  30%,
+  48% {
+    transform: translateX(-5px);
+  }
+  60%,
+  78% {
+    transform: translateX(5px);
+  }
+}
+@keyframes hw-bob {
+  50% {
+    transform: translateY(7px);
+  }
+}
+@keyframes hw-tail {
+  50% {
+    transform: rotate(-9deg);
+  }
+}
+@keyframes hw-blink {
+  0%,
+  46%,
+  50%,
+  100% {
+    transform: none;
+  }
+  48% {
+    transform: scaleY(0.1);
+  }
+}
+@keyframes hw-sway {
+  50% {
+    transform: rotate(5deg);
+  }
+}
+@keyframes hw-drift {
+  to {
+    background-position: 100% 100%;
+  }
+}
+@keyframes hw-fly {
+  from {
+    transform: translate(-12vw, 4vh);
+  }
+  to {
+    transform: translate(112vw, -6vh);
+  }
+}
+@keyframes hw-fly-back {
+  from {
+    transform: translate(112vw, 2vh);
+  }
+  to {
+    transform: translate(-12vw, -5vh);
+  }
+}
+@keyframes hw-dip {
+  to {
+    transform: translateY(16px);
+  }
+}
+@keyframes hw-flap {
+  to {
+    transform: scaleY(-0.35);
+  }
+}
