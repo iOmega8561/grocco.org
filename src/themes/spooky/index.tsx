@@ -5,7 +5,8 @@ import { PeekingGhost, LostGhost } from "./props/Ghost";
 import { Spider } from "./props/Spider";
 import { Cat } from "./props/Cat";
 import { HangingBat } from "./props/HangingBat";
-import { Night } from "./props/Night";
+import { Fog } from "./props/Fog";
+import { Flights } from "./props/Flights";
 
 /** What the Halloween theme puts on the site. Importing this file also loads its CSS. */
 export const slots: ThemeModule["slots"] = {
@@ -17,4 +18,6 @@ export const slots: ThemeModule["slots"] = {
   notFound: LostGhost,
 };
 
-export const overlay: ThemeModule["overlay"] = Night;
+export const backdrop: ThemeModule["backdrop"] = Flights;
+
+export const overlay: ThemeModule["overlay"] = Fog;

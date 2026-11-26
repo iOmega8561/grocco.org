@@ -21,10 +21,11 @@ function FlyingBat() {
 }
 
 /**
- * Over the whole site: a thin fog at the bottom of the screen and, now and then, a few bats
- * crossing the top. Readers who asked for less motion get neither the bats nor the drift.
+ * Behind the whole site: now and then, a few bats crossing the top of the screen. They fly behind the
+ * text and the slabs rather than over them, so on a phone they never hide the headline. Readers who
+ * asked for less motion get no flights.
  */
-export function Night() {
+export function Flights() {
   const reduced = useReducedMotion();
   const [flight, setFlight] = useState(0);
 
@@ -41,23 +42,19 @@ export function Night() {
     };
   }, [reduced]);
 
+  if (reduced || flight === 0) return null;
   return (
-    <>
-      <div className="hw-fog" />
-      {!reduced && flight > 0 && (
-        // A new key restarts the animation; flights alternate their direction.
-        <div key={flight} className="hw-flight" data-reverse={flight % 2 === 0 ? "" : undefined}>
-          <div className="hw-flyer" style={{ top: "14vh", width: 64, animationDelay: "0s" }}>
-            <FlyingBat />
-          </div>
-          <div className="hw-flyer" style={{ top: "21vh", width: 48, animationDelay: "0.7s" }}>
-            <FlyingBat />
-          </div>
-          <div className="hw-flyer" style={{ top: "10vh", width: 40, animationDelay: "1.3s" }}>
-            <FlyingBat />
-          </div>
-        </div>
-      )}
-    </>
+    // A new key restarts the animation; flights alternate their direction.
+    <div key={flight} className="hw-flight" data-reverse={flight % 2 === 0 ? "" : undefined}>
+      <div className="hw-flyer" style={{ top: "14vh", width: 64, animationDelay: "0s" }}>
+        <FlyingBat />
+      </div>
+      <div className="hw-flyer" style={{ top: "21vh", width: 48, animationDelay: "0.7s" }}>
+        <FlyingBat />
+      </div>
+      <div className="hw-flyer" style={{ top: "10vh", width: 40, animationDelay: "1.3s" }}>
+        <FlyingBat />
+      </div>
+    </div>
   );
 }

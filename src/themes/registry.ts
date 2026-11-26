@@ -45,19 +45,22 @@ export function themeForDate(date: Date): ThemeDefinition | undefined {
 const previewKey = "skin-preview";
 
 /**
- * The year the current window opened in. A window that wraps over the new year (31 December to
- * 1 January) opened the year before once January has come, so turning it off lasts the whole window.
+ * The first day of the occurrence that contains `date`, found by walking back while the window still
+ * holds. Turning a theme off lasts that occurrence only: a window over the new year stays off into
+ * January, and a theme with two separate days a year comes back on the second one.
  */
-function windowYear(theme: ThemeDefinition, date: Date): number {
-  const year = date.getFullYear();
-  if (typeof theme.when === "function") return year;
-  const from = monthDay(theme.when.from);
-  const to = monthDay(theme.when.to);
-  const today = (date.getMonth() + 1) * 100 + date.getDate();
-  return from > to && today <= to ? year - 1 : year;
+function occurrenceStart(theme: ThemeDefinition, date: Date): string {
+  const day = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  for (let i = 0; i < 366; i++) {
+    const before = new Date(day);
+    before.setDate(day.getDate() - 1);
+    if (!isInWindow(theme, before)) break;
+    day.setTime(before.getTime());
+  }
+  return `${day.getFullYear()}-${day.getMonth() + 1}-${day.getDate()}`;
 }
 
-const offKey = (theme: ThemeDefinition, date: Date) => `skin-off:${theme.id}:${windowYear(theme, date)}`;
+const offKey = (theme: ThemeDefinition, date: Date) => `skin-off:${theme.id}:${occurrenceStart(theme, date)}`;
 
 function read(storage: () => Storage, key: string): string | null {
   try {
@@ -100,7 +103,7 @@ function previewFromAddress(): string | null {
 export type ThemeChoice = {
   /** The theme that applies today, by calendar or by preview, whether or not the reader turned it off. */
   scheduled: ThemeDefinition | null;
-  /** Whether the reader turned it off for this year. */
+  /** Whether the reader turned it off for this occurrence. */
   off: boolean;
 };
 
@@ -113,7 +116,7 @@ export function resolveTheme(date = new Date()): ThemeChoice {
   return { scheduled, off };
 }
 
-/** Remembers, until next year's window, that the reader wants the theme off (or on again). */
+/** Remembers, until the occasion comes round again, that the reader wants the theme off (or on again). */
 export function rememberOff(theme: ThemeDefinition, off: boolean, date = new Date()): void {
   write(local, offKey(theme, date), off ? "1" : null);
 }
