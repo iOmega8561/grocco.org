@@ -805,7 +805,7 @@
  */
 @media (min-width: 64rem) {
   .hero:has(.theme-slot[data-slot="hero.stack"]) {
-    padding-top: 7.5rem;
+    padding-top: 5.0rem;
   }
 }
 

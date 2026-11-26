@@ -68,7 +68,7 @@
 .st-flagship {
   position: absolute;
   right: clamp(0.25rem, 2vw, 1.5rem);
-  bottom: calc(100% + 0.9rem);
+  bottom: 95%;
   width: clamp(124px, 13vw, 184px);
   pointer-events: auto;
   cursor: pointer;
@@ -85,7 +85,7 @@
 @media (max-width: 44rem) {
   .st-flagship {
     width: 96px;
-    bottom: calc(100% - 0.3rem);
+    bottom: 97%;
   }
 }
 .st-flagship[data-phase="gone"] {
