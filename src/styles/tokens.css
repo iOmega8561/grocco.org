@@ -54,6 +54,16 @@
   --radius-media: 22px;
   --radius-window: clamp(8px, 2.5vw, 18px);
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
+
+  /*
+   * The site's chrome, header and footer alike: translucent, blurring whatever passes behind it, with
+   * a hairline edge. It follows --bg and --line, so it follows the scheme and any theme. Wherever the
+   * blur is used, -webkit-backdrop-filter comes before backdrop-filter: in the other order the build's
+   * minifier keeps only the prefixed one, which Chrome and Firefox ignore.
+   */
+  --chrome: color-mix(in srgb, var(--bg) 82%, transparent);
+  --chrome-blur: saturate(180%) blur(20px);
+  --chrome-line: color-mix(in srgb, var(--line) 70%, transparent);
 }
 
 @media (prefers-color-scheme: dark) {

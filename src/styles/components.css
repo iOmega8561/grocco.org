@@ -4,10 +4,10 @@
   position: sticky;
   top: env(safe-area-inset-top, 0px);
   z-index: 10;
-  background: color-mix(in srgb, var(--bg) 82%, transparent);
-  backdrop-filter: saturate(180%) blur(20px);
-  -webkit-backdrop-filter: saturate(180%) blur(20px);
-  border-bottom: 1px solid color-mix(in srgb, var(--line) 70%, transparent);
+  background: var(--chrome);
+  -webkit-backdrop-filter: var(--chrome-blur);
+  backdrop-filter: var(--chrome-blur);
+  border-bottom: 1px solid var(--chrome-line);
 }
 
 .site-header__bar {
@@ -729,9 +729,13 @@
 
 /* ---------- Footer ---------- */
 
+/* The same chrome as the header, so the page is framed alike at both ends. */
 .site-footer {
   margin-top: clamp(4rem, 9vw, 7rem);
-  border-top: 1px solid var(--line);
+  background: var(--chrome);
+  -webkit-backdrop-filter: var(--chrome-blur);
+  backdrop-filter: var(--chrome-blur);
+  border-top: 1px solid var(--chrome-line);
   font-size: var(--step--1);
   color: var(--ink-2);
 }
