@@ -798,6 +798,17 @@
   pointer-events: none;
 }
 
+/*
+ * On wide screens the stack can reach up to the header, leaving no room for a decoration on top of
+ * it. When a theme fills that slot, the hero makes room; on narrow screens the stack's own margin
+ * already does.
+ */
+@media (min-width: 64rem) {
+  .hero:has(.theme-slot[data-slot="hero.stack"]) {
+    padding-top: 7.5rem;
+  }
+}
+
 /* Behind everything: the canvas still shows through, so the page's own background stays underneath. */
 .theme-backdrop {
   position: fixed;
