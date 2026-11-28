@@ -300,17 +300,19 @@
 .xm-gift {
   position: absolute;
   right: 0;
-  top: 50%;
-  width: clamp(76px, 15vw, 168px);
-  transform: translateY(-50%);
+  bottom: 0.5rem;
+  width: 64px;
   pointer-events: auto;
   cursor: pointer;
 }
-@media (max-width: 44rem) {
+/* Beside the text where the page is wide enough for it to stay clear; below it, in the corner. */
+@media (min-width: 64rem) {
   .xm-gift {
-    top: 0.75rem;
-    width: 56px;
-    transform: none;
+    right: 6%;
+    top: 50%;
+    bottom: auto;
+    width: clamp(120px, 11vw, 160px);
+    transform: translateY(-50%);
   }
 }
 .xm-gift svg {
